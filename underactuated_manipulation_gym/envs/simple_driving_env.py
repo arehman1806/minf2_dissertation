@@ -3,6 +3,7 @@ from gymnasium import spaces
 import numpy as np
 import pybullet as p
 import pybullet_data
+import cv2
 
 from underactuated_manipulation_gym.resources.queenie import Queenie_Robot
 from underactuated_manipulation_gym.resources.plane import Plane
@@ -13,7 +14,7 @@ class DifferentialDriveEnv(gym.Env):
 
         self.client = p.connect(p.GUI)
         p.setGravity(0,0,-10)
-        p.setRealTimeSimulation(1)
+        p.setRealTimeSimulation(0)
         self.robot = Queenie_Robot(self.client)
         self.plane = Plane(self.client)
 
@@ -54,7 +55,7 @@ class DifferentialDriveEnv(gym.Env):
 
         # Define your reward and done criteria
         reward = self._reward(observation, action)
-        done = self.step_i >=100
+        done = self.step_i >=1000
         self.step_i += 1
 
         return observation, reward, done, False,{}
@@ -66,7 +67,14 @@ class DifferentialDriveEnv(gym.Env):
     def _get_observation(self):
         robot_state = self.robot.get_observation()
         # convert robot_state to environment_state (i.e. observation)
-        queenie_pos, queenie_orn = robot_state
+        queenie_pos, queenie_orn = robot_state["base_pose"]
+        try:
+            camera_img = robot_state["camera_rgb"]
+            cv2.imwrite("test.png", camera_img)
+        except:
+            print("no image")
+            print(robot_state)
+
         x, y = queenie_pos[0:2]
         return np.array([x, y])
 
