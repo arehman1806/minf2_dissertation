@@ -7,7 +7,7 @@ env.reset()
 j = 0
 for i in range(1000000):
     action = env.action_space.sample()
-    action = np.zeros(4)
+    action = np.zeros(2)
     obs, reward, done, _, _ = env.step(action)
     if done:
         print(f"done {j}")

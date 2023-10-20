@@ -4,11 +4,16 @@ import os
 
 
 class ObjectMan():
-    def __init__(self, client, pose):
+    def __init__(self, client, object_path, pose):
         self.client = client
-        f_name = os.path.join(os.path.dirname(__file__), "urdfs/cuboid.urdf")
         pos, orn = pose
-        self.manipulation_object = p.loadURDF(f_name, pos, orn, physicsClientId=self.client)
+        self.manipulation_object = p.loadURDF(object_path, pos, orn, physicsClientId=self.client)
+    
+    """
+    Returns the client and robot ids
+    """
+    def get_ids(self):
+        return self.client, self.manipulation_object
     
     def remove_from_sim(self):
         p.removeBody(self.manipulation_object, physicsClientId=self.client)

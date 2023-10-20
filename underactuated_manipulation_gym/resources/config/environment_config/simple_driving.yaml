@@ -1,0 +1,3 @@
+episode_length: 200
+episode_length_test: 100
+object_dataset: objects_cuboid

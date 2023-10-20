@@ -1,0 +1,13 @@
+spawn_config:
+  min_x: 1
+  max_x: 1.5
+  min_y: -0.5
+  max_y: 0.5
+  min_z: 0.11
+  max_z: 0.10
+  min_roll: 0
+  max_roll: 0
+  min_pitch: 0
+  max_pitch: 0
+  min_yaw: -1.57
+  max_yaw: 1.57
