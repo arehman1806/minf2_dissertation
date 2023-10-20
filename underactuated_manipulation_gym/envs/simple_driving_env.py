@@ -61,8 +61,10 @@ class DifferentialDriveEnv(gym.Env):
         observation = self._get_observation()
 
         # Define your reward and done criteria
-        reward = self._reward(observation, action)
-        done = self.step_i >=100
+        reward, done = self._reward(observation, action)
+        done = done or self.step_i >=100
+        if done:
+            self.previous_distance = None
         self.step_i += 1
 
         return observation, reward, done, False,{}
@@ -76,10 +78,12 @@ class DifferentialDriveEnv(gym.Env):
         reward = 10*(self.previous_distance - distance)
         self.previous_distance = distance
         x, y, contact = observation
+        done = False
         if contact:
             reward += 1000
+            done = True
         # print(reward)
-        return reward
+        return reward, done
     
     def _calculate_robot_object_distance(self):
         object_id = self.current_object.get_ids()[1]
