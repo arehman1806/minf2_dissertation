@@ -30,7 +30,7 @@ class DifferentialDriveEnv(gym.Env):
         self.previous_distance = None
 
 
-    def reset(self):
+    def reset(self, seed=None):
         # Reset the environment to its initial state
         self.step_i = 0
         pos = [0, 0, 0.4]
@@ -40,7 +40,7 @@ class DifferentialDriveEnv(gym.Env):
         for _ in range(100):
             p.stepSimulation()
         # Return the initial observation
-        return self._get_observation()
+        return self._get_observation(), {}
 
     def step(self, action):
         # Extract the action components
@@ -70,13 +70,15 @@ class DifferentialDriveEnv(gym.Env):
     def _reward(self, observation, action):
         # Define your reward function
         distance = self._calculate_robot_object_distance()
+        # print(distance)
         if self.previous_distance is None:
             self.previous_distance = distance
-        reward = self.previous_distance - distance
+        reward = 10*(self.previous_distance - distance)
         self.previous_distance = distance
         x, y, contact = observation
         if contact:
-            reward += 10
+            reward += 1000
+        # print(reward)
         return reward
     
     def _calculate_robot_object_distance(self):
@@ -85,14 +87,16 @@ class DifferentialDriveEnv(gym.Env):
         object_link_state = p.getBasePositionAndOrientation(object_id)[0]
         robot_link_state = p.getLinkState(robot_id, 5)[0]
         distance = ((object_link_state[0] - robot_link_state[0]) ** 2 +
-                    (object_link_state[1] - robot_link_state[1] ** 2) )** 0.5
+                    (object_link_state[1] - robot_link_state[1]) ** 2 )** 0.5
         
         return distance
 
     def _get_observation(self):
-        robot_state = self.robot.get_observation()
+        robot_state = self.robot.get_state()
+        object_state = self.current_object.get_state()
         # convert robot_state to environment_state (i.e. observation)
         queenie_pos, queenie_orn = robot_state["base_pose"]
+        polar_r, polar_theta = self.cartesian_to_polar_2d(object_state[0][0], object_state[0][1], queenie_pos[0], queenie_pos[1])
         contact_points = robot_state["contact_points"]
         contact = len(contact_points) > 0
         try:
@@ -102,10 +106,31 @@ class DifferentialDriveEnv(gym.Env):
             print("no image")
             print(robot_state)
 
-        x, y = queenie_pos[0:2]
-        return np.array([x, y, contact])
+        # convert to polar coordinates:
 
+        return np.array([polar_r, polar_theta, contact])
 
+    def cartesian_to_polar_2d(self, x_target, y_target, x_origin = 0, y_origin = 0):
+        """Transform 2D cartesian coordinates to 2D polar coordinates.
+
+        Args:
+            x_target (type): x coordinate of target point.
+            y_target (type): y coordinate of target point.
+            x_origin (type): x coordinate of origin of polar system. Defaults to 0.
+            y_origin (type): y coordinate of origin of polar system. Defaults to 0.
+
+        Returns:
+            float, float: r,theta polard coordinates.
+
+        """
+
+        delta_x = x_target - x_origin
+        delta_y = y_target - y_origin
+        polar_r = np.sqrt(delta_x**2+delta_y**2)
+        polar_theta = np.arctan2(delta_y,delta_x)
+
+        return polar_r, polar_theta
+    
     def render(self, mode='human'):
         # If you want to visualize the robot's behavior, you can implement this method
         pass

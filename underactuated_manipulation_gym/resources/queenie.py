@@ -53,7 +53,7 @@ class Queenie_Robot():
     Returns the observation of the robot in a dictionary format with
     separate keys for camera, joint states, and contact points
     """
-    def get_observation(self):
+    def get_state(self):
         # Base position and orientation
         base_pose = p.getBasePositionAndOrientation(self.robot)
 

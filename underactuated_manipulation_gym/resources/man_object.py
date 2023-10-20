@@ -15,6 +15,10 @@ class ObjectMan():
     def get_ids(self):
         return self.client, self.manipulation_object
     
+
+    def get_state(self):
+        return p.getBasePositionAndOrientation(self.manipulation_object, physicsClientId=self.client)
+    
     def remove_from_sim(self):
         p.removeBody(self.manipulation_object, physicsClientId=self.client)
 
