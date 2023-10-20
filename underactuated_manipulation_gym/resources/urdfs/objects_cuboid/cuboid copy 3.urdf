@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot name="cuboid_object">
+
+  <!-- Base Link -->
+  <link name="base_link">
+    <contact>
+      <lateral_friction value="1"/>
+      <rolling_friction value="0.0"/>
+      <stiffness value="3000"/>
+      <damping value="1000"/>
+    </contact>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.5"/> <!-- Assuming a reasonable weight for a small cuboid -->
+      <inertia 
+        ixx="0.000011333333333333334" 
+        ixy="0.0" 
+        ixz="0.0" 
+        iyy="0.000011333333333333334" 
+        iyz="0.0" 
+        izz="0.00007466666666666667"/> <!-- Adjusted the inertia tensor -->
+    </inertial>
+    <collision>
+      <geometry>
+        <box size="0.04 0.04 0.2"/>
+      </geometry>
+    </collision>
+    <visual>
+      <geometry>
+        <box size="0.04 0.04 0.2"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 1 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+</robot>
