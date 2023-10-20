@@ -13,10 +13,10 @@ class Queenie_Robot():
 
         self._setup_joint_motors()
         # self._setup_gear_constraints()
-        p.setJointMotorControl2(self.robot, 1, p.POSITION_CONTROL, targetPosition=0)
-        p.setJointMotorControl2(self.robot, 2, p.POSITION_CONTROL, targetPosition=0)
-        p.setJointMotorControl2(self.robot, 4, p.POSITION_CONTROL, targetPosition=0.5, force=20)
-        p.setJointMotorControl2(self.robot, 5, p.POSITION_CONTROL, targetPosition=0.5, force=20)
+
+
+        self.camera_link_index = self._get_link_index("camera")
+        self.palm_link_index = self._get_link_index("palm")
     
     """
     Returns the client and robot ids
@@ -38,12 +38,16 @@ class Queenie_Robot():
     Applies the action to the robot
     """
     def apply_action(self, action):
-        v_left, v_right = action
+        v_left, v_right, neck_pos, neck_x_pos = action
         # wheels
         p.setJointMotorControl2(self.robot, 8, p.VELOCITY_CONTROL, targetVelocity=v_left)
         p.setJointMotorControl2(self.robot, 9, p.VELOCITY_CONTROL, targetVelocity=v_right)
         p.setJointMotorControl2(self.robot, 10, p.VELOCITY_CONTROL, targetVelocity=v_left)
         p.setJointMotorControl2(self.robot, 11, p.VELOCITY_CONTROL, targetVelocity=v_right)
+
+        # neck
+        p.setJointMotorControl2(self.robot, 1, p.POSITION_CONTROL, targetPosition=neck_pos)
+        p.setJointMotorControl2(self.robot, 2, p.POSITION_CONTROL, targetPosition=neck_x_pos)
     
     """
     Returns the observation of the robot in a dictionary format with
@@ -53,10 +57,14 @@ class Queenie_Robot():
         # Base position and orientation
         base_pose = p.getBasePositionAndOrientation(self.robot)
 
+        # contact points for palm link
+        contact_points = p.getContactPoints(bodyA=self.robot, linkIndexA=self.palm_link_index)
+
+        # Joint states
+
         # Get the POV of the "camera" link
-        camera_link_index = self._get_link_index("camera")
-        if camera_link_index != -1:
-            link_state = p.getLinkState(self.robot, camera_link_index)
+        if self.camera_link_index != -1:
+            link_state = p.getLinkState(self.robot, self.camera_link_index)
             camera_pos = link_state[0]
             camera_orn = link_state[1]
 
@@ -90,6 +98,7 @@ class Queenie_Robot():
             # Construct observation dictionary
             observation = {
                 "base_pose": base_pose,
+                "contact_points": contact_points,
                 "camera_rgb": rgb_img,
                 "camera_depth": depth_img
             }
@@ -105,6 +114,11 @@ class Queenie_Robot():
         for joint in range(p.getNumJoints(self.robot)):
             p.setJointMotorControl2(self.robot, joint, p.VELOCITY_CONTROL, targetVelocity=0, force=0)
             print(p.getJointInfo(self.robot, joint))
+        p.setJointMotorControl2(self.robot, 1, p.POSITION_CONTROL, targetPosition=0)
+        p.setJointMotorControl2(self.robot, 2, p.POSITION_CONTROL, targetPosition=0)
+        p.setJointMotorControl2(self.robot, 4, p.POSITION_CONTROL, targetPosition=0.5, force=20)
+        p.setJointMotorControl2(self.robot, 5, p.POSITION_CONTROL, targetPosition=0.5, force=20)
+        return
         
     def _setup_gear_constraints(self):
         front_left_wheel = 8

@@ -7,6 +7,7 @@ import cv2
 
 from underactuated_manipulation_gym.resources.queenie import Queenie_Robot
 from underactuated_manipulation_gym.resources.plane import Plane
+from underactuated_manipulation_gym.resources.man_object import ObjectMan
 
 class DifferentialDriveEnv(gym.Env):
     def __init__(self):
@@ -17,6 +18,7 @@ class DifferentialDriveEnv(gym.Env):
         p.setRealTimeSimulation(0)
         self.robot = Queenie_Robot(self.client)
         self.plane = Plane(self.client)
+        self.object = ObjectMan(self.client)
 
         self.observation_space = self._get_observation_space()
         self.action_space = self._get_action_space()
@@ -37,12 +39,12 @@ class DifferentialDriveEnv(gym.Env):
 
     def step(self, action):
         # Extract the action components
-        v, w_angular = action
+        v, w_angular, neck_pos, neck_x_pos = action
 
         v_left = v - w_angular * 0.6 / 2
         v_right = v + w_angular * 0.6 / 2
 
-        action = [v_left, v_right]
+        action = [v_left, v_right, neck_pos, neck_x_pos]
 
         self.robot.apply_action(action)
 
@@ -68,6 +70,8 @@ class DifferentialDriveEnv(gym.Env):
         robot_state = self.robot.get_observation()
         # convert robot_state to environment_state (i.e. observation)
         queenie_pos, queenie_orn = robot_state["base_pose"]
+        contact_points = robot_state["contact_points"]
+        print(contact_points)
         try:
             camera_img = robot_state["camera_rgb"]
             cv2.imwrite("test.png", camera_img)
@@ -98,6 +102,18 @@ class DifferentialDriveEnv(gym.Env):
         # Define the observation space
         return spaces.Box(low=-np.inf, high=np.inf, shape=(2,), dtype=np.float32)
     
+    """
+    Define the action space
+    """
     def _get_action_space(self):
-        # Define the action space
-        return spaces.Box(low=-2, high=2, shape=(2,), dtype=np.float32)
+        min_linear_vel = -2
+        max_linear_vel = 2
+        min_angular_vel = -2
+        max_angular_vel = 2
+        min_neck_joint = -1
+        max_neck_joint = 0.21
+        min_neck_joint = -0.5
+        max_neck_joint = 0.5
+        min_action = [min_linear_vel, min_angular_vel, min_neck_joint, min_neck_joint]
+        max_action = [max_linear_vel, max_angular_vel, max_neck_joint, max_neck_joint]
+        return spaces.Box(low=np.array(min_action), high=np.array(max_action), dtype=np.float32)
