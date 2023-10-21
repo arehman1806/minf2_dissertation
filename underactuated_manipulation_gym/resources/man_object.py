@@ -4,10 +4,10 @@ import os
 
 
 class ObjectMan():
-    def __init__(self, client, object_path, pose):
+    def __init__(self, client, object_path, pose, scale=1):
         self.client = client
         pos, orn = pose
-        self.manipulation_object = p.loadURDF(object_path, pos, orn, physicsClientId=self.client)
+        self.manipulation_object = p.loadURDF(object_path, pos, orn, globalScaling=scale, physicsClientId=self.client)
     
     """
     Returns the client and robot ids

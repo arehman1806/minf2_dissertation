@@ -3,6 +3,7 @@ import os
 import numpy as np
 import yaml
 import pybullet as p
+import pybullet_data
 
 # from man_object import ObjectMan
 from underactuated_manipulation_gym.resources.man_object import ObjectMan
@@ -13,9 +14,16 @@ class ObjectLoader:
     def __init__(self, client, object_class) -> None:
         self.client = client
         self.spawn_config = self._load_config()["spawn_config"]
-        self.object_paths = self._load_object_paths(object_class)
+        self.global_scale = 1
+        if object_class == "random_urdfs":
+            self.object_paths = [str(file) for file in Path(f"{pybullet_data.getDataPath()}/{object_class}/").rglob('*.urdf') if file.is_file()]
+            self.global_scale = 4
+        else:
+            self.object_paths = self._load_object_paths(object_class)
+        if len(self.object_paths) == 0:
+            raise Exception(f"No objects found for {object_class}")
+        
         self.current_object = None
-
         self.rng = np.random.default_rng()
 
     def change_object(self, pose=None):
@@ -30,7 +38,7 @@ class ObjectLoader:
     def _spawn_object(self, pose):
         if pose is None:
             pose = self._sample_pose()
-        return ObjectMan(self.client, self.rng.choice(self.object_paths), pose)
+        return ObjectMan(self.client, self.rng.choice(self.object_paths), pose, self.global_scale)
 
     def _remove_object(self):
         self.current_object.remove_from_sim()
