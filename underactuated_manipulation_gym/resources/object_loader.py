@@ -13,7 +13,9 @@ class ObjectLoader:
 
     def __init__(self, client, object_class) -> None:
         self.client = client
-        self.spawn_config = self._load_config()["spawn_config"]
+        config = self._load_config()
+        self.spawn_config = config["spawn_config"]
+        object_class = config["object_class"]
         self.global_scale = 1
         if object_class == "random_urdfs":
             self.object_paths = [str(file) for file in Path(f"{pybullet_data.getDataPath()}/{object_class}/").rglob('*.urdf') if file.is_file()]

@@ -1,1 +1,2 @@
-from underactuated_manipulation_gym.envs.simple_driving_env import DifferentialDriveEnv
+# from underactuated_manipulation_gym.envs.base_environment import BaseManipulationEnvironment
+from underactuated_manipulation_gym.envs.simple_driving_environment import DifferentialDriveEnv

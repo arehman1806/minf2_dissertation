@@ -1,3 +1,4 @@
+object_class: "random_urdfs"
 spawn_config:
   min_x: 1
   max_x: 2
