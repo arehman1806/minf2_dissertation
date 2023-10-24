@@ -8,3 +8,9 @@ register(
      max_episode_steps=100,
 )
 
+register(
+     id="queenie_gym_envs/RandomURDFsSOEnvironment-v0",
+     entry_point="underactuated_manipulation_gym.envs:RandomURDFsSOEnvironment",
+     max_episode_steps=100,
+)
+

@@ -17,12 +17,15 @@ class Queenie_Robot():
 
         self.camera_link_index = self._get_link_index("camera")
         self.palm_link_index = self._get_link_index("palm")
+        self.left_finger_link_index = self._get_link_index("left_finger")
+        self.right_finger_link_index = self._get_link_index("right_finger")
     
     """
     Returns the client and robot ids
     """
     def get_ids(self):
         return self.client, self.robot
+    
     
     """
     Resets the robot to the given position and orientation
@@ -38,7 +41,7 @@ class Queenie_Robot():
     Applies the action to the robot
     """
     def apply_action(self, action):
-        v_left, v_right, neck_pos, neck_x_pos = action
+        v_left, v_right, neck_pos, neck_x_pos, gripper = action
         # wheels
         p.setJointMotorControl2(self.robot, 8, p.VELOCITY_CONTROL, targetVelocity=v_left)
         p.setJointMotorControl2(self.robot, 9, p.VELOCITY_CONTROL, targetVelocity=v_right)
@@ -48,6 +51,11 @@ class Queenie_Robot():
         # neck
         p.setJointMotorControl2(self.robot, 1, p.POSITION_CONTROL, targetPosition=neck_pos)
         p.setJointMotorControl2(self.robot, 2, p.POSITION_CONTROL, targetPosition=neck_x_pos)
+
+        # gripper
+        position = 0.1 if gripper > 0 else 0
+        p.setJointMotorControl2(self.robot, 4, p.POSITION_CONTROL, targetPosition=position)
+        p.setJointMotorControl2(self.robot, 5, p.POSITION_CONTROL, targetPosition=position)
     
     """
     Returns the observation of the robot in a dictionary format with
@@ -58,9 +66,19 @@ class Queenie_Robot():
         base_pose = p.getBasePositionAndOrientation(self.robot)
 
         # contact points for palm link
-        contact_points = p.getContactPoints(bodyA=self.robot, linkIndexA=self.palm_link_index)
-
-        # Joint states
+        contact_points_palm = p.getContactPoints(bodyA=self.robot, linkIndexA=self.palm_link_index)
+        contact_points_left_finger = p.getContactPoints(bodyA=self.robot, linkIndexA=self.left_finger_link_index)
+        contact_points_right_finger = p.getContactPoints(bodyA=self.robot, linkIndexA=self.right_finger_link_index)
+        contact_points = [contact_points_palm, contact_points_left_finger, contact_points_right_finger]
+        
+        # Proprioception
+        gripper_open = p.getJointState(self.robot, 4)[0] > 0.05
+        gripper_joint_angles = [p.getJointState(self.robot,1)[0], p.getJointState(self.robot, 2)[0], gripper_open]
+        left_vel = p.getJointState(self.robot, 8)[1]
+        right_vel = p.getJointState(self.robot, 9)[1]
+        linear_vel = (left_vel + right_vel) / 2
+        angular_vel = (right_vel - left_vel) / 0.6
+        proprioception = [linear_vel, angular_vel] + gripper_joint_angles
 
         # Get the POV of the "camera" link
         if self.camera_link_index != -1:
@@ -84,20 +102,22 @@ class Queenie_Robot():
 
             # Set the PyBullet visualizer camera to the exact position and orientation of the "camera" link
             view_matrix = p.computeViewMatrix(camera_pos, camera_target, [0, 0, 1])
-            proj_matrix = p.computeProjectionMatrixFOV(fov=60, 
-                                                       aspect=float(960) /720, 
+            proj_matrix = p.computeProjectionMatrixFOV(fov=80, 
+                                                       aspect=float(84) /84, 
                                                        nearVal=0.01, 
                                                        farVal=100)
 
             # Capture the image from this viewpoint
-            width, height, rgb_img, depth_img, _ = p.getCameraImage(960, 720, 
+            width, height, rgb_img, depth_img, _ = p.getCameraImage(84, 84, 
                                                                     viewMatrix=view_matrix,
                                                                     projectionMatrix=proj_matrix,
                                                                     renderer=p.ER_BULLET_HARDWARE_OPENGL)
+            rgb_img = rgb_img[:, :, :3]
 
             # Construct observation dictionary
             observation = {
                 "base_pose": base_pose,
+                "proprioception": proprioception,
                 "contact_points": contact_points,
                 "camera_rgb": rgb_img,
                 "camera_depth": depth_img

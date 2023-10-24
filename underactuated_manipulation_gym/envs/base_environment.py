@@ -43,13 +43,8 @@ class BaseManipulationEnvironment(gym.Env):
         return self._get_observation(), {}
 
     def step(self, action):
-        # Extract the action components
-        v, w_angular = action
 
-        v_left = v - w_angular * 0.6 / 2
-        v_right = v + w_angular * 0.6 / 2
-
-        action = [v_left, v_right, 0, 0]
+        action = self._calculate_action(action)
 
         self.robot.apply_action(action)
 
@@ -84,6 +79,10 @@ class BaseManipulationEnvironment(gym.Env):
 
     def _get_observation(self):
         raise NotImplementedError
+    
+    def _calculate_action(self, action):
+        raise NotImplementedError
+
 
     def cartesian_to_polar_2d(self, x_target, y_target, x_origin = 0, y_origin = 0):
         """Transform 2D cartesian coordinates to 2D polar coordinates.
