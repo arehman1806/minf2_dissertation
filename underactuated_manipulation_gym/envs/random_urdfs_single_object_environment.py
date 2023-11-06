@@ -8,8 +8,13 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
     
     def __init__(self):
         super().__init__()
+        self.previous_action = np.array([0, 0, 0, 0, 0])
 
     def _reward(self, observation, action):
+        linear_vel, angular_vel, neck_y, neck_x, gripper = action
+        current_action = np.array([linear_vel, angular_vel, neck_y, neck_x, gripper])
+        difference_in_actions = np.linalg.norm(current_action - self.previous_action)
+        self.previous_action = current_action
         # Define your reward function
         distance = self._calculate_robot_object_distance()
         # print(str(observation["image_obs"].shape) + "\n\n\n\n\n\n\n\n\n\n\n\n")

@@ -1,0 +1,18 @@
+ def _reward(self, observation, action):
+        # Define your reward function
+        distance = self._calculate_robot_object_distance()
+        # print(str(observation["image_obs"].shape) + "\n\n\n\n\n\n\n\n\n\n\n\n")
+        # print(distance)
+        if self.previous_distance is None:
+            self.previous_distance = distance
+        reward = self.previous_distance - distance
+        self.previous_distance = distance
+        contacts = observation["vect_obs"][-3:]
+        num_contacts = sum(contacts)
+        if num_contacts > 1:
+            reward += num_contacts
+        done = False
+
+        return reward, done
+
+with this reward funciton, the agent learned to rest its gripper on the object. mathematically it makes perfect sense
