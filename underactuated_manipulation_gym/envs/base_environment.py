@@ -17,6 +17,7 @@ class BaseManipulationEnvironment(gym.Env):
         self.client = p.connect(p.GUI)
         p.setGravity(0,0,-10)
         p.setRealTimeSimulation(0)
+        # p.setTimeStep(1./500)
         self.robot = Queenie_Robot(self.client)
         self.plane = Plane(self.client)
         self.object_loader = ObjectLoader(self.client, "random_urdfs")

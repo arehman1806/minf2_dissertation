@@ -3,6 +3,9 @@ import os
 import math
 import numpy as np
 
+queenie_joints = {0: 'gripper_extension', 1: 'neck', 2: 'neck_x', 3: 'head_gripper_pole_vertical', 4: 'palm_left_finger', 5: 'palm_right_finger', 6: 'camera_joint', 7: 'camera_optical_joint', 8: 'left_wheel_hinge', 9: 'right_wheel_hinge', 10: 'left_wheel_back_hinge', 11: 'right_wheel_back_hinge'}
+queenie_links = {7: 'head_x', 6: 'head', 8: 'left_finger', 9: 'right_finger', 10: 'left_wheel', 11: 'right_wheel', 12: 'left_wheel_back', 13: 'right_wheel_back', 14: 'right_wheel_back_hinge'}
+
 class Queenie_Robot():
 
     def __init__(self, client) -> None:
@@ -57,6 +60,13 @@ class Queenie_Robot():
         p.setJointMotorControl2(self.robot, 4, p.POSITION_CONTROL, targetPosition=position)
         p.setJointMotorControl2(self.robot, 5, p.POSITION_CONTROL, targetPosition=position)
     
+    
+    def calculate_contact_norm(self, contacts):
+        norm = np.array([0.0,0.0,0.0])
+        for contact in contacts:
+            norm += np.array(contact[7])
+        norm = norm / np.linalg.norm(norm)
+        return norm
     """
     Returns the observation of the robot in a dictionary format with
     separate keys for camera, joint states, and contact points
@@ -65,11 +75,16 @@ class Queenie_Robot():
         # Base position and orientation
         base_pose = p.getBasePositionAndOrientation(self.robot)
 
-        # contact points for palm link
+        # contact points
         contact_points_palm = p.getContactPoints(bodyA=self.robot, linkIndexA=self.palm_link_index)
         contact_points_left_finger = p.getContactPoints(bodyA=self.robot, linkIndexA=self.left_finger_link_index)
         contact_points_right_finger = p.getContactPoints(bodyA=self.robot, linkIndexA=self.right_finger_link_index)
-        contact_points = [contact_points_palm, contact_points_left_finger, contact_points_right_finger]
+        angle_bw_norms = 0
+        if len(contact_points_left_finger) > 0 and len(contact_points_right_finger) > 0:
+            left_norm = self.calculate_contact_norm(contact_points_left_finger)
+            right_norm = self.calculate_contact_norm(contact_points_right_finger)
+            angle_bw_norms = np.arccos(np.clip(np.dot(left_norm, right_norm), -1.0, 1.0))
+        contact_points = [contact_points_palm, contact_points_left_finger, contact_points_right_finger] + [angle_bw_norms]
         
         # Proprioception
         gripper_open = p.getJointState(self.robot, 4)[0] > 0.05
@@ -105,7 +120,7 @@ class Queenie_Robot():
             proj_matrix = p.computeProjectionMatrixFOV(fov=80, 
                                                        aspect=float(84) /84, 
                                                        nearVal=0.01, 
-                                                       farVal=100)
+                                                       farVal=5)
 
             # Capture the image from this viewpoint
             width, height, rgb_img, depth_img, _ = p.getCameraImage(84, 84, 
@@ -146,15 +161,15 @@ class Queenie_Robot():
         front_right_wheel = 9
         rear_right_wheel = 11
         # Set up gear constraints so that wheels on the same side rotate at the same speed:
-        c1 = p.createConstraint(self.robot, front_left_wheel, self.robot, rear_left_wheel,
-                                    jointType=p.JOINT_GEAR, jointAxis=[0, 1, 0],
-                                    parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0])
-        p.changeConstraint(c1, gearRatio=1, maxForce=100)
+        # c1 = p.createConstraint(self.robot, front_left_wheel, self.robot, rear_left_wheel,
+        #                             jointType=p.JOINT_GEAR, jointAxis=[0, 1, 0],
+        #                             parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0])
+        # p.changeConstraint(c1, gearRatio=1, maxForce=100)
 
-        c2 = p.createConstraint(self.robot, front_right_wheel, self.robot, rear_right_wheel,
-                                    jointType=p.JOINT_GEAR, jointAxis=[0, 1, 0],
-                                    parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0])
-        p.changeConstraint(c2, gearRatio=1, maxForce=100)
+        # c2 = p.createConstraint(self.robot, front_right_wheel, self.robot, rear_right_wheel,
+        #                             jointType=p.JOINT_GEAR, jointAxis=[0, 1, 0],
+        #                             parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0])
+        # p.changeConstraint(c2, gearRatio=1, maxForce=100)
 
         c = p.createConstraint(self.robot, 4, self.robot, 5,
                             jointType=p.JOINT_GEAR,
