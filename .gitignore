@@ -1,1 +1,15 @@
-**/__pycache__/
+# Python cache:
+**__pycache__/
+*.py[cod]
+*$py.class
+*.cpython-*.pyc
+
+# Tensorflow specific:
+*.ckpt
+events.out.tfevents.*
+graph.pbtxt
+model.ckpt*
+checkpoint
+
+# Saved models
+*.zip

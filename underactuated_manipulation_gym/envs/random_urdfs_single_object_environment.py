@@ -46,7 +46,9 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         num_contacts = sum(contacts)
         if num_contacts > 0:
             if contacts[0] == 1:
+                print("contact with palm")
                 reward += 1000
+                return reward, True
             else:
                 reward += 0.01 * num_contacts
         

@@ -19,6 +19,7 @@ for i in range(1000000):
     neck_x = p.readUserDebugParameter(interface_neck_x)
     gripper_pos = p.readUserDebugParameter(interface_gripper_position)
     action = np.array([v, w_angular, neck_y, neck_x, gripper_pos])
+    action = np.array([v, w_angular, neck_y, neck_x])
     # action = env.action_space.sample()
     # action = np.array([0.0, 0.0, 0.0, 0.0, 1])
     obs, reward, done, _, _ = env.step(action)

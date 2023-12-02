@@ -16,14 +16,15 @@ class BaseManipulationEnvironment(gym.Env):
         if config_file is None:
             raise Exception("No config file provided")
         super(BaseManipulationEnvironment, self).__init__()
-
-        self.client = p.connect(p.GUI)
-        p.setGravity(0,0,-10)
-        p.setRealTimeSimulation(0)
-        # p.setTimeStep(1./500)
         config = self._parse_config(config_file)
         self.robot_config = config["robot"]
         self.environment_config = config["environment"]
+        render_gui = self.environment_config["gui"]
+        connection_mode = p.GUI if render_gui else p.DIRECT
+        self.client = p.connect(connection_mode)
+        p.setGravity(0,0,-10)
+        p.setRealTimeSimulation(0)
+        # p.setTimeStep(1./500)
         self.robot = Queenie_Robot(self.client, self.robot_config)
         self.plane = Plane(self.client)
         self.object_loader = ObjectLoader(self.client, "random_urdfs", num_objects=self.environment_config["num_objects"], specific_objects=self.environment_config["specific_objects"])
