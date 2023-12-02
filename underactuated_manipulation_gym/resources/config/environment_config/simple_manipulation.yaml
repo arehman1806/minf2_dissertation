@@ -78,6 +78,7 @@ robot:
       semantic: False
       camera_near: 0.005
       camera_far: 3.0
+      resolution: 84
     
     proprioception:
       # base velocity

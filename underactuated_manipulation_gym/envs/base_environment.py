@@ -8,8 +8,8 @@ import yaml
 
 from underactuated_manipulation_gym.resources.queenie.robot_env_interface import Queenie_Robot
 from underactuated_manipulation_gym.resources.plane import Plane
-from underactuated_manipulation_gym.resources.man_object import ObjectMan
-from underactuated_manipulation_gym.resources.object_loader import ObjectLoader
+from underactuated_manipulation_gym.resources.objects.man_object import ObjectMan
+from underactuated_manipulation_gym.resources.objects.object_loader import ObjectLoader
 
 class BaseManipulationEnvironment(gym.Env):
     def __init__(self, config_file):
@@ -43,6 +43,9 @@ class BaseManipulationEnvironment(gym.Env):
 
         self.previous_distance = None
 
+    def render(self, mode="human"):
+        # Render the environment for logging to tensorboard
+        return self.robot.render_camera_image()
 
     def reset(self, seed=None):
         # Reset the environment to its initial state

@@ -14,7 +14,7 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         self.consecutive_graps = 0
         self.robot_state = None
         self._gripper_enabled = self.robot_config["actuators"]["gripper"]
-
+        
     def _reward(self, observation, proprioception_indices, action):
         reward = 0
 

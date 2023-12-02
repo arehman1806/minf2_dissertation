@@ -85,7 +85,7 @@ class Queenie_Robot():
     """
     Applies the action to the robot
     """
-    def apply_action_1(self, action):
+    def apply_action_old(self, action):
         v_left, v_right, neck_pos, neck_x_pos, gripper = action
         # wheels
         p.setJointMotorControl2(self.robot, 8, p.VELOCITY_CONTROL, targetVelocity=v_left)
@@ -194,6 +194,9 @@ class Queenie_Robot():
         # 2 incldues linear and angular velocity
         len_action_space = 2 + len(self._config["actuators"]["joints"]) + int(self._config["actuators"]["gripper"])
         return len_action_space
+    
+    def render_camera_image(self):
+        return self.sensors["camera"].get_render_images()
 
 
 

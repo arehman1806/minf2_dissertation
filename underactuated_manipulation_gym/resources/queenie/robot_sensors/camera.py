@@ -21,6 +21,9 @@ class Camera_Sensor(Sensor):
         self.semantic = self._sensor_params["semantic"]
         self.camera_near = self._sensor_params["camera_near"]
         self.camera_far = self._sensor_params["camera_far"]
+        self.resolution = self._sensor_params["resolution"]
+        self.current_rgb_image = np.zeros((self.resolution, self.resolution, 3))
+        self.current_depth_image = np.zeros((self.resolution, self.resolution, 1))
         dry_run = self.get_observation()
         return dry_run.shape
     
@@ -47,16 +50,18 @@ class Camera_Sensor(Sensor):
         # Set the PyBullet visualizer camera to the exact position and orientation of the "camera" link
         view_matrix = p.computeViewMatrix(camera_pos, camera_target, [0, 0, 1])
         proj_matrix = p.computeProjectionMatrixFOV(fov=80, 
-                                                    aspect=float(84) /84, 
+                                                    aspect=float(self.resolution) /self.resolution, 
                                                     nearVal=self.camera_near, 
                                                     farVal=self.camera_far)
 
         # Capture the image from this viewpoint
-        width, height, rgb_img, depth_img, semantic_img = p.getCameraImage(84, 84, 
+        width, height, rgb_img, depth_img, semantic_img = p.getCameraImage(self.resolution, self.resolution, 
                                                                 viewMatrix=view_matrix,
                                                                 projectionMatrix=proj_matrix,
                                                                 renderer=p.ER_BULLET_HARDWARE_OPENGL)
         rgb_img = rgb_img[:, :, :3]  # This is a 3D array
+        self.current_rgb_image = rgb_img
+        self.current_depth_image = depth_img
 
         # Convert to greyscale if required
         if self.greyscale:
@@ -98,3 +103,6 @@ class Camera_Sensor(Sensor):
             [np.sin(theta), np.cos(theta)]
         ])
         return rotation_matrix.dot(vector)
+    
+    def get_render_images(self):
+        return self.current_rgb_image, self.current_depth_image

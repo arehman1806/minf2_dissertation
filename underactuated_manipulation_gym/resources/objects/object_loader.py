@@ -6,7 +6,7 @@ import pybullet as p
 import pybullet_data
 
 # from man_object import ObjectMan
-from underactuated_manipulation_gym.resources.man_object import ObjectMan
+from underactuated_manipulation_gym.resources.objects.man_object import ObjectMan
 
 
 class ObjectLoader:
