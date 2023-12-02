@@ -27,7 +27,10 @@ class BaseManipulationEnvironment(gym.Env):
         # p.setTimeStep(1./500)
         self.robot = Queenie_Robot(self.client, self.robot_config)
         self.plane = Plane(self.client)
-        self.object_loader = ObjectLoader(self.client, "random_urdfs", num_objects=self.environment_config["num_objects"], specific_objects=self.environment_config["specific_objects"])
+        self.object_loader = ObjectLoader(self.client, "random_urdfs", 
+                                          num_objects=self.environment_config["num_objects"], 
+                                          specific_objects=self.environment_config["specific_objects"],
+                                          global_scale=self.environment_config["global_scale"])
         self.current_object = None
 
         self._episode_length = self.environment_config["episode_length"]

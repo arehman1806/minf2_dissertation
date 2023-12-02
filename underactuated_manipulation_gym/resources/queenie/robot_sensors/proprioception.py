@@ -28,6 +28,7 @@ class Proprioception_Sensor(Sensor):
         self._contact_links = self._sensor_params["contact_links"]
         self._report_contact_force = self._sensor_params["contact_force"]
         self._report_normal_angle = self._sensor_params["normal_angle"]
+        self._report_normal_angle_palm = self._sensor_params["normal_angle_palm"]
 
         dry_run, _ = self.get_observation()
         return dry_run.shape
@@ -75,6 +76,7 @@ class Proprioception_Sensor(Sensor):
         
         contact_points_left_finger = None
         contact_points_right_finger = None
+        contact_points_palm = None
         contacts = []
         contact_forces = []
         for link in self._contact_links:
@@ -82,8 +84,10 @@ class Proprioception_Sensor(Sensor):
             contacts.append(int(len(contact_points) > 0))
             if link == self._left_finger_index:
                 contact_points_left_finger = contact_points
-            if link == self._right_finger_index:
+            elif link == self._right_finger_index:
                 contact_points_right_finger = contact_points
+            else:
+                contact_points_palm = contact_points
             if self._report_contact_force:
                 contact_force = 0
                 for contact_point in contact_points:
@@ -102,6 +106,15 @@ class Proprioception_Sensor(Sensor):
                 right_norm = self._calculate_contact_norm(contact_points_right_finger)
                 angle_bw_norms = np.arccos(np.clip(np.dot(left_norm, right_norm), -1.0, 1.0))
             indices["normal_angle"] = len(observation)
+            observation.append(angle_bw_norms)
+        
+        if self._report_normal_angle_palm:
+            angle_bw_norms = 0
+            if len(contact_points_palm) > 0:
+                left_norm = self._calculate_contact_norm(contact_points_left_finger)
+                right_norm = self._calculate_contact_norm(contact_points_right_finger)
+                angle_bw_norms = np.arccos(np.clip(np.dot(left_norm, right_norm), -1.0, 1.0))
+            indices["normal_angle_palm"] = len(observation)
             observation.append(angle_bw_norms)
         
         observation = np.array(observation)

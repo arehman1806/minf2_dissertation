@@ -11,21 +11,19 @@ from underactuated_manipulation_gym.resources.man_object import ObjectMan
 
 class ObjectLoader:
 
-    def __init__(self, client, object_class, specific_objects=[], num_objects=-1) -> None:
+    def __init__(self, client, object_class, specific_objects=[], num_objects=-1, global_scale=4) -> None:
         self.client = client
         self.rng = np.random.default_rng()
         config = self._load_config()
         self.spawn_config = config["spawn_config"]
         object_class = config["object_class"]
-        self.global_scale = 1
+        self.global_scale = global_scale
         if object_class == "random_urdfs":
             self.object_paths = [str(file) for file in Path(f"{pybullet_data.getDataPath()}/{object_class}/").rglob('*.urdf') if file.is_file()]
             if len(specific_objects) != 0:
                 self.object_paths = self.object_paths[[specific_objects]]
             elif num_objects != -1:
                 self.object_paths = self.object_paths[0:num_objects]
-            
-            self.global_scale = 4
         else:
             self.object_paths = self._load_object_paths(object_class)
         if len(self.object_paths) == 0:

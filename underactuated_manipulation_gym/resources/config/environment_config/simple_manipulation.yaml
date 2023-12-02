@@ -1,39 +1,40 @@
 ######### LINK INDEXES TO BE USED IN THIS FILE. THESE WILL REMAIN CONSTANT UNLESS WE CHANGE THE URDF #########
 
-# {'chassis': -1, 
-# 'gripper_pole': 0, 
-# 'head': 1, 
-# 'head_x': 2, 
-# 'palm': 3, 
-# 'left_finger': 4, 
-# 'right_finger': 5, 
-# 'camera': 6, 
-# 'camera_optical': 7, 
-# 'left_wheel': 8, 
-# 'right_wheel': 9, 
-# 'left_wheel_back': 10, 
-# 'right_wheel_back': 11}
+# chassis: -1
+# gripper_pole: 0
+# head: 1
+# head_x: 2
+# palm: 3
+# left_finger: 4
+# right_finger: 5
+# camera: 6
+# camera_optical: 7
+# left_wheel: 8
+# right_wheel: 9
+# left_wheel_back: 10
+# right_wheel_back: 11
 
 ######### JOINT INDEXES TO BE USED IN THIS FILE. THESE WILL REMAIN CONSTANT UNLESS WE CHANGE THE URDF #########
 
-# {'gripper_extension': 0, 
-# 'neck': 1, 
-# 'neck_x': 2, 
-# 'head_gripper_pole_vertical': 3, 
-# 'palm_left_finger': 4, 
-# 'palm_right_finger': 5, 
-# 'camera_joint': 6, 
-# 'camera_optical_joint': 7, 
-# 'left_wheel_hinge': 8, 
-# 'right_wheel_hinge': 9, 
-# 'left_wheel_back_hinge': 10, 
-# 'right_wheel_back_hinge': 11}
+# gripper_extension: 0
+# neck: 1
+# neck_x: 2
+# head_gripper_pole_vertical: 3
+# palm_left_finger: 4
+# palm_right_finger: 5
+# camera_joint: 6
+# camera_optical_joint: 7
+# left_wheel_hinge: 8
+# right_wheel_hinge: 9
+# left_wheel_back_hinge: 10
+# right_wheel_back_hinge: 11
 
 ######### ENVIRONMENT #########
 environment:
   episode_length: 100
   episode_length_test: 100
   object_dataset: random_urdfs
+  global_scale: 4.0
   specific_objects: [] # this has to be empty if num_objects is not -1
   num_objects: 10
   gui: True
@@ -98,6 +99,7 @@ robot:
         - 5
       contact_force: False
       normal_angle: False
+      normal_angle_palm: False
 
   ######### ACTUATORS #########
 
