@@ -7,7 +7,7 @@ import numpy as np
 # IMPORTANT. edit this before every run:
 tb_log_name = "first_run"
 
-env = gym.make("queenie_gym_envs/RandomURDFsSOEnvironment-v0")
+env = gym.make("queenie_gym_envs/RandomURDFsSOEnvironment-v0", config_file="./underactuated_manipulation_gym/resources/config/environment_config/simple_manipulation.yaml")
 env.reset()
 model = SAC("MultiInputPolicy", env, verbose=1, buffer_size=500000, tensorboard_log="./logs/simple_multi_object_pickup_agent")
 model.learn(total_timesteps=500000, log_interval=10, tb_log_name=tb_log_name)

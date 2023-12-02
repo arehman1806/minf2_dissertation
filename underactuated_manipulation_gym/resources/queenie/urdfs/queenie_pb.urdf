@@ -194,7 +194,7 @@
   <link name="right_finger">
     <contact>
       <lateral_friction value="1"/>
-      <rolling_friction value="1"/>
+      <rolling_friction value="0"/>
       <stiffness value="300000"/>
       <damping value="1000"/>
     </contact>

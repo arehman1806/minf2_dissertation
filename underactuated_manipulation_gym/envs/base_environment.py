@@ -4,24 +4,33 @@ import numpy as np
 import pybullet as p
 import pybullet_data
 import cv2
+import yaml
 
-from underactuated_manipulation_gym.resources.queenie import Queenie_Robot
+from underactuated_manipulation_gym.resources.queenie.robot_env_interface import Queenie_Robot
 from underactuated_manipulation_gym.resources.plane import Plane
 from underactuated_manipulation_gym.resources.man_object import ObjectMan
 from underactuated_manipulation_gym.resources.object_loader import ObjectLoader
 
 class BaseManipulationEnvironment(gym.Env):
-    def __init__(self):
+    def __init__(self, config_file):
+        if config_file is None:
+            raise Exception("No config file provided")
         super(BaseManipulationEnvironment, self).__init__()
 
         self.client = p.connect(p.GUI)
         p.setGravity(0,0,-10)
         p.setRealTimeSimulation(0)
         # p.setTimeStep(1./500)
-        self.robot = Queenie_Robot(self.client)
+        config = self._parse_config(config_file)
+        self.robot_config = config["robot"]
+        self.environment_config = config["environment"]
+        self.robot = Queenie_Robot(self.client, self.robot_config)
         self.plane = Plane(self.client)
-        self.object_loader = ObjectLoader(self.client, "random_urdfs")
+        self.object_loader = ObjectLoader(self.client, "random_urdfs", num_objects=self.environment_config["num_objects"], specific_objects=self.environment_config["specific_objects"])
         self.current_object = None
+
+        self._episode_length = self.environment_config["episode_length"]
+        
 
         self.observation_space = self._get_observation_space()
         self.action_space = self._get_action_space()
@@ -41,11 +50,11 @@ class BaseManipulationEnvironment(gym.Env):
         for _ in range(100):
             p.stepSimulation()
         # Return the initial observation
-        return self._get_observation(), {}
+        return self._get_observation()[0], {}
 
     def step(self, action):
 
-        action = self._calculate_action(action)
+        # action = self._calculate_action(action)
 
         self.robot.apply_action(action)
 
@@ -54,18 +63,18 @@ class BaseManipulationEnvironment(gym.Env):
             p.stepSimulation()
 
         # Get the new observation after taking the action
-        observation = self._get_observation()
+        observation, proprioception_indices = self._get_observation()
 
         # Define your reward and done criteria
-        reward, done = self._reward(observation, action)
-        done = done or self.step_i >=100
+        reward, done = self._reward(observation, proprioception_indices, action)
+        done = done or self.step_i >= self._episode_length
         if done:
             self.previous_distance = None
         self.step_i += 1
 
         return observation, reward, done, False,{}
     
-    def _reward(self, observation, action):
+    def _reward(self, observation, proprioception_indices, action):
         raise NotImplementedError
     
     def _calculate_robot_object_distance(self):
@@ -119,8 +128,12 @@ class BaseManipulationEnvironment(gym.Env):
         # Set the random seed for reproducibility
         pass
 
-    def _parse_config(self):
-        pass
+    """loads yaml config file and returns a dictionary"""
+    def _parse_config(self, config_file):
+        with open(config_file) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        return config
+        
 
     def _get_observation_space(self):
         raise NotImplementedError
@@ -129,4 +142,12 @@ class BaseManipulationEnvironment(gym.Env):
     Define the action space
     """
     def _get_action_space(self):
-        raise NotImplementedError
+
+        # Define the action space
+        # use the robot parameters from self.robot_params to define the action space
+        len_action_space = self.robot.get_action_space_size()
+        
+        # the actions will always be normalised, so the action space is always between -1 and 1
+        min_action = np.full(len_action_space, -1)
+        max_action = np.full(len_action_space, 1)
+        return spaces.Box(low=min_action, high=max_action, dtype=np.float32)
