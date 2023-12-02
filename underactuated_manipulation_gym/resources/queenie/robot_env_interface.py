@@ -112,6 +112,7 @@ class Queenie_Robot():
     def get_state(self):
             image_obs = self.sensors["camera"].get_observation()
             proprioception, indices = self.sensors["proprioception"].get_observation()
+            proprioception = np.array(proprioception, dtype=np.float32)
 
             # Construct observation dictionary
             observation = {
