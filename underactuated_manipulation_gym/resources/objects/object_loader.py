@@ -66,7 +66,7 @@ class ObjectLoader:
     def _load_config(self):
         current_file = __file__
         current_directory = os.path.dirname(current_file)
-        with open(f"{current_directory}/config/manipulation_object.yaml") as file:
+        with open(f"{current_directory}/manipulation_object.yaml") as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
         return config
 

@@ -14,6 +14,10 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         self.consecutive_graps = 0
         self.robot_state = None
         self._gripper_enabled = self.robot_config["actuators"]["gripper"]
+
+    def render(self, mode="human"):
+        # Render the environment for logging to tensorboard
+        return self.robot.render_camera_image()
         
     def _reward(self, observation, proprioception_indices, action):
         reward = 0

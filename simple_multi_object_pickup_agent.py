@@ -2,11 +2,13 @@ import gymnasium as gym
 from stable_baselines3 import SAC
 from stable_baselines3.common.callbacks import CheckpointCallback
 import underactuated_manipulation_gym
+# from video_record_callback import VideoRecorderCallback
 import time
 import numpy as np
 
 # IMPORTANT. edit this before every run:
-tb_log_name = "rgb_multi_object_palm_contact_fixed_gripper_free_joints_2"
+tb_log_name = "100_objects_rgb_multi_object_palm_contact_fixed_gripper_free_joints_2"
+tb_log_name = "testing_videos"
 # Save a checkpoint every 1000 steps
 checkpoint_callback = CheckpointCallback(
   save_freq=50000,
@@ -18,8 +20,9 @@ checkpoint_callback = CheckpointCallback(
 
 env = gym.make("queenie_gym_envs/RandomURDFsSOEnvironment-v0", config_file="./underactuated_manipulation_gym/resources/config/environment_config/simple_manipulation.yaml")
 env.reset()
-model = SAC("MultiInputPolicy", env, verbose=1, buffer_size=200000, tensorboard_log="./logs/simple_multi_object_pickup_agent")
-model.learn(total_timesteps=200000, log_interval=10, tb_log_name=tb_log_name, callback=checkpoint_callback, progress_bar=True)
+# video_recorder = VideoRecorderCallback(env, render_freq=100)
+model = SAC("MultiInputPolicy", env, verbose=1, buffer_size=500000, tensorboard_log="./logs/simple_multi_object_pickup_agent")
+model.learn(total_timesteps=500000, log_interval=10, tb_log_name=tb_log_name, callback=checkpoint_callback, progress_bar=True)
 model.save(f"{tb_log_name}_final")
 # model = SAC.load("sac_queenie", env=env)
 # vec_env = model.get_env()

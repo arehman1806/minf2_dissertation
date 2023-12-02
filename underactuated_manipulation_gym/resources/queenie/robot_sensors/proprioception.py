@@ -13,6 +13,7 @@ class Proprioception_Sensor(Sensor):
 
         self._left_finger_index = get_link_index(self.robot, "left_finger")
         self._right_finger_index = get_link_index(self.robot, "right_finger")
+        self._palm_index = get_link_index(self.robot, "palm")
 
         self.dim_obs_space = self._setup_proprioception()
 
@@ -109,13 +110,21 @@ class Proprioception_Sensor(Sensor):
             observation.append(angle_bw_norms)
         
         if self._report_normal_angle_palm:
-            angle_bw_norms = 0
+            angle = 0
             if len(contact_points_palm) > 0:
-                left_norm = self._calculate_contact_norm(contact_points_left_finger)
-                right_norm = self._calculate_contact_norm(contact_points_right_finger)
-                angle_bw_norms = np.arccos(np.clip(np.dot(left_norm, right_norm), -1.0, 1.0))
+                palm_norm = self._calculate_contact_norm(contact_points_palm)
+                
+                # transform the palm norm from world frame to palm frame and find out the angle it makes with y axis of palm frame
+                _, palm_orientation_quat, _, _, _, _  = p.getLinkState(self.robot, self._palm_index, physicsClientId=self.client)
+                palm_orientation_euler = p.getEulerFromQuaternion(palm_orientation_quat)
+                palm_y_axis_world = np.array(palm_orientation_euler[3:6])
+                palm_y_axis_world_normalized = palm_y_axis_world / np.linalg.norm(palm_y_axis_world)
+                print(f"palm_y_axis_world_normalized: {palm_y_axis_world_normalized} palm_norm: {palm_norm}")
+                cos_theta = np.dot(palm_norm, palm_y_axis_world_normalized)
+                angle = np.arccos(cos_theta)
+                print("Angle in radians:", angle)
             indices["normal_angle_palm"] = len(observation)
-            observation.append(angle_bw_norms)
+            observation.append(angle)
         
         observation = np.array(observation)
         # print(indices)

@@ -23,9 +23,9 @@ for i in range(1000000):
     # action = env.action_space.sample()
     # action = np.array([0.0, 0.0, 0.0, 0.0, 1])
     obs, reward, done, _, _ = env.step(action)
-    img_to_save = obs["image_obs"]
-    img_to_save = np.transpose(img_to_save, (1, 2, 0))
-    cv2.imwrite("test.png", img_to_save)
+    # img_to_save = obs["image_obs"]
+    # img_to_save = np.transpose(img_to_save, (1, 2, 0))
+    # cv2.imwrite("test.png", img_to_save)
     # print(obs["image_obs"].shape)
     # if done:
     #     print(f"done {j}")

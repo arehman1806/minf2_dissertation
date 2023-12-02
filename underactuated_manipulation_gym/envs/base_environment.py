@@ -43,9 +43,7 @@ class BaseManipulationEnvironment(gym.Env):
 
         self.previous_distance = None
 
-    def render(self, mode="human"):
-        # Render the environment for logging to tensorboard
-        return self.robot.render_camera_image()
+    
 
     def reset(self, seed=None):
         # Reset the environment to its initial state
