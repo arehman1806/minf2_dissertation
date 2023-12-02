@@ -42,10 +42,16 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
 
 
         # reward contact to encourage exploration
-        contacts = observation["vect_obs"][-3:]
+        contacts = observation["vect_obs"][proprioception_indices["contact"]: proprioception_indices["contact"] + 3]
         num_contacts = sum(contacts)
         if num_contacts > 0:
-            reward += 0.01 * num_contacts
+            if contacts[0] == 1:
+                reward += 1000
+            else:
+                reward += 0.01 * num_contacts
+        
+        # high reward for palm contact
+
         
         # reward correct grasp
         # angle_bw_contact_norms = self.robot_state["contact_points"][3]
