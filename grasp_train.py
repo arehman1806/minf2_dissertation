@@ -13,7 +13,7 @@ tb_log_name = "100obj_rgb_gripper_normvectobs"
 # tb_log_name = "testing_videos"
 # Save a checkpoint every 1000 steps
 checkpoint_callback = CheckpointCallback(
-  save_freq=50000,
+  save_freq=40000,
   save_path=f"./{tb_log_name}/",
   name_prefix=tb_log_name,
   save_replay_buffer=False,
@@ -27,7 +27,7 @@ env = VecNormalize(env, norm_obs=True, norm_reward=False, norm_obs_keys=["vect_o
 
 env.reset()
 # video_recorder = VideoRecorderCallback(env, render_freq=100)
-model = SAC("MultiInputPolicy", env, verbose=1, buffer_size=500000, tensorboard_log="./logs/simple_multi_object_pickup_agent")
+model = SAC("MultiInputPolicy", env, verbose=1, buffer_size=200000, tensorboard_log="./logs/simple_multi_object_pickup_agent")
 model.learn(total_timesteps=500000, log_interval=10, tb_log_name=tb_log_name, callback=checkpoint_callback, progress_bar=True)
 model.save(f"{tb_log_name}_final")
 env.save(f"{tb_log_name}_vec_normalize")
