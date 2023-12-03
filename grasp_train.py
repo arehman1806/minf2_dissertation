@@ -8,7 +8,7 @@ import numpy as np
 
 # IMPORTANT. edit this before every run:
 tb_log_name = "100_objects_rgb_multi_object_palm_contact_fixed_gripper_free_joints_2"
-tb_log_name = "testing_videos"
+# tb_log_name = "testing_videos"
 # Save a checkpoint every 1000 steps
 checkpoint_callback = CheckpointCallback(
   save_freq=50000,

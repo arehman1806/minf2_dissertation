@@ -87,8 +87,8 @@ robot:
       - 1
       - 2
       # gripper joints
-      - 4
-      - 5
+      # - 4
+      # - 5
       joint_position: True
       joint_velocity: False
       jrf: False
@@ -109,9 +109,7 @@ robot:
     joints:
       - 1
       - 2
-      - 4
-      - 5
-    gripper: False
+    gripper: True
     wheel_joints:
       - 8
       - 9

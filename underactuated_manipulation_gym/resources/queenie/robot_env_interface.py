@@ -46,6 +46,10 @@ class Queenie_Robot():
         # set joint positions to initial positions
         for joint in self._config["actuators"]["joints"]:
             p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=self._config["parameters"]["joint_params"][joint]["init"])
+        # set gripper to initial position
+        if self._config["actuators"]["gripper"]:
+            for joint in self._config["parameters"]["gripper"]["joints"]:
+                p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=self._config["parameters"]["gripper"]["init"])
         p.resetBasePositionAndOrientation(self.robot, position, orientation)
     
     def apply_action(self, action, use_gripper=False):

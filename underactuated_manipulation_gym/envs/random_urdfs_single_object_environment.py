@@ -66,6 +66,7 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         if abs(angle_bw_contact_norms) > np.pi / 2:
             reward += 1000
             done = True
+            print("grasp successful")
             # self.consecutive_graps += 1
         else:
             # self.consecutive_graps = 0
