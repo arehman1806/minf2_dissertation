@@ -133,6 +133,9 @@ class BaseManipulationEnvironment(gym.Env):
         # Set the random seed for reproducibility
         pass
 
+    def get_robot(self):
+        return self.robot
+
     """loads yaml config file and returns a dictionary"""
     def _parse_config(self, config_file):
         with open(config_file) as f:

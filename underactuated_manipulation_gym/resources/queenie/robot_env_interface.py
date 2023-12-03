@@ -48,7 +48,7 @@ class Queenie_Robot():
             p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=self._config["parameters"]["joint_params"][joint]["init"])
         p.resetBasePositionAndOrientation(self.robot, position, orientation)
     
-    def apply_action(self, action):
+    def apply_action(self, action, use_gripper=False):
         # we do not know the size of action, but we know first two are linear and angular velocity
         # this is followed by actuated neck joints and gripper (if gripper is enabled)
         v, w_angular = action[:2]
@@ -74,7 +74,7 @@ class Queenie_Robot():
             p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=pos)
         
         # gripper
-        if self._config["actuators"]["gripper"]:
+        if self._config["actuators"]["gripper"] or use_gripper:
             position = self._config["parameters"]["gripper"]["max"] if action[-1] > 0 else self._config["parameters"]["gripper"]["min"]
             for joint in self._config["parameters"]["gripper"]["joints"]:
                 p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=position, force=20)
