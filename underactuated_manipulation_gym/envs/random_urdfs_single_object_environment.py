@@ -63,7 +63,7 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
 
         # reward correct grasp
         angle_bw_contact_norms = observation["vect_obs"][proprioception_indices["normal_angle"]]
-        if abs(angle_bw_contact_norms) > np.pi / 2:
+        if abs(angle_bw_contact_norms) > 3 * np.pi / 4 and action[-1] <= 0:
             reward += 1000
             done = True
             print("grasp successful")
