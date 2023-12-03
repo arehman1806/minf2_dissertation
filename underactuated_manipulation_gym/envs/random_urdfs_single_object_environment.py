@@ -20,6 +20,7 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         return self.robot.render_camera_image()
         
     def _reward(self, observation, proprioception_indices, action):
+        done = False
         reward = 0
 
         # penalize large movements, both planer movement and joint angles
