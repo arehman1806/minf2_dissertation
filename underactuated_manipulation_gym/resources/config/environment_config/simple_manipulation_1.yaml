@@ -99,7 +99,7 @@ robot:
         - 4
         - 5
       contact_force: False
-      normal_angle: False
+      normal_angle: True
       normal_angle_palm: False
 
   ######### ACTUATORS #########
@@ -109,7 +109,7 @@ robot:
     joints:
       - 1
       - 2
-    gripper: False
+    gripper: True
     wheel_joints:
       - 8
       - 9

@@ -20,7 +20,6 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         return self.robot.render_camera_image()
         
     def _reward(self, observation, proprioception_indices, action):
-        done = False
         reward = 0
 
         # penalize large movements, both planer movement and joint angles
@@ -49,28 +48,14 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         # reward contact to encourage exploration
         contacts = observation["vect_obs"][proprioception_indices["contact"]: proprioception_indices["contact"] + 3]
         num_contacts = sum(contacts)
-        reward += 0.01 * num_contacts
-
-        # high reward for palm contact
-        # if num_contacts > 0:
-        #     if contacts[0] == 1:
-        #         print("contact with palm")
-        #         reward += 1000
-        #         return reward, True
-        #     else:
-        #         reward += 0.01 * num_contacts
-        
-
-        # reward correct grasp
-        angle_bw_contact_norms = observation["vect_obs"][proprioception_indices["normal_angle"]]
-        if abs(angle_bw_contact_norms) > 3 * np.pi / 4 and action[-1] <= 0:
-            reward += 1000
-            done = True
-            print("grasp successful")
-            # self.consecutive_graps += 1
-        else:
-            # self.consecutive_graps = 0
-            reward += 1 * abs(angle_bw_contact_norms)
+        if num_contacts > 0:
+            if contacts[0] == 1:
+                print("contact with palm")
+                reward += 1000
+                return reward, True
+            else:
+                reward += 0.01 * num_contacts
+        done = self.consecutive_graps > 3
 
         return reward, done
     
@@ -134,28 +119,63 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         vect_obs = spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
         return spaces.Dict({"image_obs": image_obs, "vect_obs": vect_obs})
         # return spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)
-    
-    # def _get_action_space(self):
 
-    #     # Define the action space
-    #     # use the robot parameters from self.robot_params to define the action space
-    #     len_action_space = self.robot.get_action_space_size()
+class RandomURDFsSOEnvironment1(RandomURDFsSOEnvironment):
+
+    def __init__(self, config_file):
+        super().__init__(config_file)
+
+    def _reward(self, observation, proprioception_indices, action):
+        done = False
+        reward = 0
+
+        # penalize large movements, both planer movement and joint angles
+        linear_vel, angular_vel = action[:2]
+        if self._gripper_enabled:
+            gripper = action[-1]
+            current_joint_commands = action[2:-1]
+        else:
+            current_joint_commands = action[2:]
+        current_vels = np.array([linear_vel, angular_vel])
+        diff_vels = abs(current_vels - self.previous_vels)
+        reward += -0.01 * np.sum(diff_vels)
+        self.previous_vels = current_vels
+        diff_joint_positions = abs(current_joint_commands - self.previous_joint_commands)
+        reward += -0.9 * np.sum(diff_joint_positions)
+        self.previous_joint_commands = current_joint_commands
+
+        # Penalise movement away from the object and reward movement closer to the object
+        distance = self._calculate_robot_object_distance()
+        if self.previous_distance is None:
+            self.previous_distance = distance
+        reward += 0.01 * self.previous_distance - distance
+        self.previous_distance = distance
+
+
+        # reward contact to encourage exploration
+        contacts = observation["vect_obs"][proprioception_indices["contact"]: proprioception_indices["contact"] + 3]
+        num_contacts = sum(contacts)
+        reward += 0.01 * num_contacts
+
+        # high reward for palm contact
+        # if num_contacts > 0:
+        #     if contacts[0] == 1:
+        #         print("contact with palm")
+        #         reward += 1000
+        #         return reward, True
+        #     else:
+        #         reward += 0.01 * num_contacts
         
-    #     # the actions will always be normalised, so the action space is always between -1 and 1
-    #     min_action = np.full(len_action_space, -1)
-    #     max_action = np.full(len_action_space, 1)
-    #     return spaces.Box(low=min_action, high=max_action, dtype=np.float32)
 
-    #     min_linear_vel = -2
-    #     max_linear_vel = 2
-    #     min_angular_vel = -2
-    #     max_angular_vel = 2
-    #     min_neck_joint = -1
-    #     max_neck_joint = 0.21
-    #     min_neck_joint = -0.5
-    #     max_neck_joint = 0.5
-    #     max_gripper = 1
-    #     min_gripper = -1
-    #     min_action = [min_linear_vel, min_angular_vel, min_neck_joint, min_neck_joint, min_gripper]
-    #     max_action = [max_linear_vel, max_angular_vel, max_neck_joint, max_neck_joint, max_gripper]
-    #     return spaces.Box(low=np.array(min_action), high=np.array(max_action), dtype=np.float32)
+        # reward correct grasp
+        angle_bw_contact_norms = observation["vect_obs"][proprioception_indices["normal_angle"]]
+        if abs(angle_bw_contact_norms) > 3 * np.pi / 4 and action[-1] <= 0:
+            reward += 1000
+            done = True
+            print("grasp successful")
+            # self.consecutive_graps += 1
+        else:
+            # self.consecutive_graps = 0
+            reward += 1 * abs(angle_bw_contact_norms)
+
+        return reward, done
