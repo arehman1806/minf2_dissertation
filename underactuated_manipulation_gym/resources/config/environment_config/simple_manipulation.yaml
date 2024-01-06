@@ -72,8 +72,8 @@ robot:
   sensors:
    
     camera:
-      depth: False
-      rgb: True
+      depth: True
+      rgb: False
       greyscale: False
       semantic: False
       camera_near: 0.005

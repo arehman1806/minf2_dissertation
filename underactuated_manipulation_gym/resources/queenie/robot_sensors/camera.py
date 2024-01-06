@@ -74,9 +74,27 @@ class Camera_Sensor(Sensor):
             depth_image_normalized = cv2.normalize(depth, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
             # Convert to an unsigned 8-bit integer array
             depth_image_normalized = np.uint8(depth_image_normalized)
-            depth_image_normalized = np.squeeze(depth_image_normalized)
-            depth_img = np.expand_dims(depth_image_normalized, axis=2)  # Make depth a single-channel 3D image
+            depth_image_normalized = np.squeeze(depth_image_normalized)# Expand the depth image to 3 channels
+            depth_img = np.stack((depth_image_normalized, depth_image_normalized, depth_image_normalized), axis=-1)
+            # depth_img = np.expand_dims(depth_image_normalized, axis=2)  # Make depth a single-channel 3D image
+        # debug stuff
+        # Calculate the intrinsic matrix
+        fov = 80  # Horizontal field of view in degrees
+        image_width = self.resolution
+        image_height = self.resolution
 
+        # Convert FOV from degrees to radians for the calculation
+        fov_rad = math.radians(fov)
+        f_x = image_width / (2 * math.tan(fov_rad / 2))
+        f_y = f_x  # Assuming square pixels (aspect ratio = 1)
+        c_x = image_width / 2
+        c_y = image_height / 2
+
+        intrinsic_matrix = [[f_x, 0, c_x],
+                            [0, f_y, c_y],
+                            [0, 0, 1]]   
+        # print("intrinsic_matrix: ", intrinsic_matrix)                                                                               
+        # cv2.imwrite("test.png", np.squeeze(depth_img))
         # Optionally, add semantic image layer
         if self.semantic:
             semantic_img = np.expand_dims(semantic_img, axis=2)  # Make semantic a single-channel 3D image
@@ -85,7 +103,8 @@ class Camera_Sensor(Sensor):
         if self.depth and self.semantic:
             observation = np.concatenate((rgb_img, depth_img, semantic_img), axis=2)
         elif self.depth:
-            observation = np.concatenate((rgb_img, depth_img), axis=2)
+            # observation = np.concatenate((rgb_img, depth_img), axis=2)
+            observation = depth_img
         elif self.semantic:
             observation = np.concatenate((rgb_img, semantic_img), axis=2)
         else:
