@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import pybullet as p
 
-from underactuated_manipulation_gym.envs.base_environment import BaseManipulationEnvironment
+from underactuated_manipulation_gym.envs.base_env import BaseManipulationEnvironment
 
 class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
     
@@ -41,7 +41,7 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         distance = self._calculate_robot_object_distance()
         if self.previous_distance is None:
             self.previous_distance = distance
-        reward += 0.01 * (self.previous_distance - distance)
+        reward += 0.01 * self.previous_distance - distance
         self.previous_distance = distance
 
 
@@ -148,7 +148,7 @@ class RandomURDFsSOEnvironment1(RandomURDFsSOEnvironment):
         distance = self._calculate_robot_object_distance()
         if self.previous_distance is None:
             self.previous_distance = distance
-        reward += 0.01 * (self.previous_distance - distance)
+        reward += 0.01 * self.previous_distance - distance
         self.previous_distance = distance
 
 

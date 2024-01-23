@@ -21,7 +21,8 @@ class ObjectLoader:
         if object_class == "random_urdfs":
             self.object_paths = sorted([str(file) for file in Path(f"{pybullet_data.getDataPath()}/{object_class}/").rglob('*.urdf') if file.is_file()])
             if len(specific_objects) != 0:
-                self.object_paths = self.object_paths[[specific_objects]]
+                self.object_paths = [self.object_paths[i] for i in specific_objects]
+
             elif num_objects != -1:
                 self.object_paths = self.object_paths[0:num_objects]
         else:

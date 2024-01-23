@@ -10,6 +10,7 @@ from underactuated_manipulation_gym.resources.queenie.robot_env_interface import
 from underactuated_manipulation_gym.resources.plane import Plane
 from underactuated_manipulation_gym.resources.objects.man_object import ObjectMan
 from underactuated_manipulation_gym.resources.objects.object_loader import ObjectLoader
+from underactuated_manipulation_gym.resources.target import Target
 
 class BaseManipulationEnvironment(gym.Env):
     def __init__(self, config_file):
@@ -31,7 +32,8 @@ class BaseManipulationEnvironment(gym.Env):
                                           num_objects=self.environment_config["num_objects"], 
                                           specific_objects=self.environment_config["specific_objects"],
                                           global_scale=self.environment_config["global_scale"])
-        self.current_object = None
+        self.current_object = self.object_loader.change_object()
+        self.target = Target(self.client, ([5,5,0.0], [0,0,0,1]))
 
         self._episode_length = self.environment_config["episode_length"]
         
@@ -52,6 +54,7 @@ class BaseManipulationEnvironment(gym.Env):
         orn = p.getQuaternionFromEuler([0, 0, 0])
         self.robot.reset(pos, orn)
         self.current_object = self.object_loader.change_object()
+        self.target.reset_position(None)
         for _ in range(100):
             p.stepSimulation()
         # Return the initial observation
@@ -86,9 +89,18 @@ class BaseManipulationEnvironment(gym.Env):
         object_id = self.current_object.get_ids()[1]
         robot_id = self.robot.get_ids()[1]
         object_link_state = p.getBasePositionAndOrientation(object_id)[0]
-        robot_link_state = p.getLinkState(robot_id, 5)[0]
+        robot_link_state = p.getLinkState(robot_id, 3)[0]
         distance = ((object_link_state[0] - robot_link_state[0]) ** 2 +
                     (object_link_state[1] - robot_link_state[1]) ** 2 )** 0.5
+        
+        return distance
+    
+    def _calculate_object_target_distance(self):
+        object_id = self.current_object.get_ids()[1]
+        object_link_state = p.getBasePositionAndOrientation(object_id)[0]
+        target_link_state = self.target.get_base_position()
+        distance = ((object_link_state[0] - target_link_state[0]) ** 2 +
+                    (object_link_state[1] - target_link_state[1]) ** 2 )** 0.5
         
         return distance
 

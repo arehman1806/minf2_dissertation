@@ -19,3 +19,8 @@ register(
      entry_point="underactuated_manipulation_gym.envs:RandomURDFsSOEnvironment1",
      max_episode_steps=100,
 )
+
+register(
+     id="queenie_gym_envs/PushEnvironment-v0",
+     entry_point="underactuated_manipulation_gym.envs:PushEnvironment",
+)

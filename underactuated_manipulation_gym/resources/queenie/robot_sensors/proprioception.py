@@ -56,7 +56,7 @@ class Proprioception_Sensor(Sensor):
         joint_velocities = []
         jrfs = []
         jmts = []
-        joint_states = p.getJointStates(self.robot, self.joints, physicsClientId=self.client)
+        joint_states = p.getJointStates(self.robot, self.joints, physicsClientId=self.client) if len(self.joints) > 0 else []
         for joint_state in joint_states:
             joint_positions.append(joint_state[0])
             joint_velocities.append(joint_state[1])

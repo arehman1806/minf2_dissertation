@@ -35,6 +35,9 @@ class Queenie_Robot():
     def get_ids(self):
         return self.client, self.robot
     
+    def get_base_pose(self):
+        return p.getBasePositionAndOrientation(self.robot, self.client)
+    
     
     """
     Resets the robot to the given position and orientation

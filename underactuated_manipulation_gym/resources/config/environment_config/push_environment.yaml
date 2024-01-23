@@ -1,0 +1,121 @@
+######### LINK INDEXES TO BE USED IN THIS FILE. THESE WILL REMAIN CONSTANT UNLESS WE CHANGE THE URDF #########
+
+# chassis: -1
+# gripper_pole: 0
+# head: 1
+# head_x: 2
+# palm: 3
+# left_finger: 4
+# right_finger: 5
+# camera: 6
+# camera_optical: 7
+# left_wheel: 8
+# right_wheel: 9
+# left_wheel_back: 10
+# right_wheel_back: 11
+
+######### JOINT INDEXES TO BE USED IN THIS FILE. THESE WILL REMAIN CONSTANT UNLESS WE CHANGE THE URDF #########
+
+# gripper_extension: 0
+# neck: 1
+# neck_x: 2
+# head_gripper_pole_vertical: 3
+# palm_left_finger: 4
+# palm_right_finger: 5
+# camera_joint: 6
+# camera_optical_joint: 7
+# left_wheel_hinge: 8
+# right_wheel_hinge: 9
+# left_wheel_back_hinge: 10
+# right_wheel_back_hinge: 11
+
+######### ENVIRONMENT #########
+environment:
+  episode_length: 300
+  episode_length_test: 200
+  object_dataset: random_urdfs
+  global_scale: 4.0
+  specific_objects: [1] # this has to be empty if num_objects is not -1
+  num_objects: -1
+  target_radius: 1
+  gui: True
+  experiment_name: some_experiment_name
+
+######### ROBOT #########
+
+robot:
+
+######### ROBOT PARAMETERS #########
+  parameters:
+    max_linear_velocity: 2
+    min_linear_velocity: -2
+    max_angular_velocity: 2
+    min_angular_velocity: -2
+    joint_params:
+      1: 
+        min: 0
+        max: 0.21
+        init: 0
+      2: 
+        min: -0.5
+        max: 0.5
+        init: 0
+    gripper:
+      min: 0
+      max: 0.1
+      init: 0.1
+      joints:
+        - 4
+        - 5
+    
+
+######### SENSORS #########
+  sensors:
+   
+    camera:
+      depth: False
+      rgb: False
+      greyscale: True
+      semantic: False
+      camera_near: 0.005
+      camera_far: 3.0
+      resolution: 84
+    
+    proprioception:
+      # base velocity
+      lin_ang_velocity: True
+      joints: []
+      # - 1
+      # - 2
+      # gripper joints
+      # - 4
+      # - 5
+      joint_position: True
+      joint_velocity: False
+      jrf: False
+      jmt: False
+      #contacts
+      contact_links:
+        - 3
+        - 4
+        - 5
+      contact_force: False
+      normal_angle: False
+      normal_angle_palm: False
+
+  ######### ACTUATORS #########
+
+  actuators:
+    # joints
+    joints: []
+      # - 1
+      # - 2
+    gripper: False
+    wheel_joints:
+      - 8
+      - 9
+      - 10
+      - 11
+
+
+

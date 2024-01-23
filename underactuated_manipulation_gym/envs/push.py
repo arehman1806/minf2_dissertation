@@ -3,9 +3,9 @@ import numpy as np
 import cv2
 import pybullet as p
 
-from underactuated_manipulation_gym.envs.base_environment import BaseManipulationEnvironment
+from underactuated_manipulation_gym.envs.base_env import BaseManipulationEnvironment
 
-class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
+class PushFixedJoints(BaseManipulationEnvironment):
     
     def __init__(self, config_file):
         super().__init__(config_file)
@@ -14,6 +14,7 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         self.consecutive_graps = 0
         self.robot_state = None
         self._gripper_enabled = self.robot_config["actuators"]["gripper"]
+        self.goal = np.array([0.5, 0.5])
 
     def render(self, mode="human"):
         # Render the environment for logging to tensorboard
@@ -22,26 +23,18 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
     def _reward(self, observation, proprioception_indices, action):
         reward = 0
 
-        # penalize large movements, both planer movement and joint angles
-        linear_vel, angular_vel = action[:2]
-        if self._gripper_enabled:
-            gripper = action[-1]
-            current_joint_commands = action[2:-1]
-        else:
-            current_joint_commands = action[2:]
-        current_vels = np.array([linear_vel, angular_vel])
-        diff_vels = abs(current_vels - self.previous_vels)
-        reward += -0.01 * np.sum(diff_vels)
-        self.previous_vels = current_vels
-        diff_joint_positions = abs(current_joint_commands - self.previous_joint_commands)
-        reward += -0.9 * np.sum(diff_joint_positions)
-        self.previous_joint_commands = current_joint_commands
+        # encourage contact with the object
+        contacts = observation["vect_obs"][proprioception_indices["contact"]: proprioception_indices["contact"] + 3]
+        num_contacts = sum(contacts)
+        reward += 0.01 * num_contacts
+
+        # encourage movement towards the goal by rewarding based on delta distance OF THE OBJECT computed by taking different in polar coordinates
 
         # Penalise movement away from the object and reward movement closer to the object
         distance = self._calculate_robot_object_distance()
         if self.previous_distance is None:
             self.previous_distance = distance
-        reward += 0.01 * (self.previous_distance - distance)
+        reward += 0.01 * self.previous_distance - distance
         self.previous_distance = distance
 
 
@@ -119,63 +112,3 @@ class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
         vect_obs = spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
         return spaces.Dict({"image_obs": image_obs, "vect_obs": vect_obs})
         # return spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)
-
-class RandomURDFsSOEnvironment1(RandomURDFsSOEnvironment):
-
-    def __init__(self, config_file):
-        super().__init__(config_file)
-
-    def _reward(self, observation, proprioception_indices, action):
-        done = False
-        reward = 0
-
-        # penalize large movements, both planer movement and joint angles
-        linear_vel, angular_vel = action[:2]
-        if self._gripper_enabled:
-            gripper = action[-1]
-            current_joint_commands = action[2:-1]
-        else:
-            current_joint_commands = action[2:]
-        current_vels = np.array([linear_vel, angular_vel])
-        diff_vels = abs(current_vels - self.previous_vels)
-        reward += -0.01 * np.sum(diff_vels)
-        self.previous_vels = current_vels
-        diff_joint_positions = abs(current_joint_commands - self.previous_joint_commands)
-        reward += -0.9 * np.sum(diff_joint_positions)
-        self.previous_joint_commands = current_joint_commands
-
-        # Penalise movement away from the object and reward movement closer to the object
-        distance = self._calculate_robot_object_distance()
-        if self.previous_distance is None:
-            self.previous_distance = distance
-        reward += 0.01 * (self.previous_distance - distance)
-        self.previous_distance = distance
-
-
-        # reward contact to encourage exploration
-        contacts = observation["vect_obs"][proprioception_indices["contact"]: proprioception_indices["contact"] + 3]
-        num_contacts = sum(contacts)
-        reward += 0.01 * num_contacts
-
-        # high reward for palm contact
-        # if num_contacts > 0:
-        #     if contacts[0] == 1:
-        #         print("contact with palm")
-        #         reward += 1000
-        #         return reward, True
-        #     else:
-        #         reward += 0.01 * num_contacts
-        
-
-        # reward correct grasp
-        angle_bw_contact_norms = observation["vect_obs"][proprioception_indices["normal_angle"]]
-        if abs(angle_bw_contact_norms) > 3 * np.pi / 4 and action[-1] <= 0:
-            reward += 1000
-            done = True
-            print("grasp successful")
-            # self.consecutive_graps += 1
-        else:
-            # self.consecutive_graps = 0
-            reward += 1 * abs(angle_bw_contact_norms)
-
-        return reward, done
