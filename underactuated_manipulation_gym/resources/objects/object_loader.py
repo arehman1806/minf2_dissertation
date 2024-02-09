@@ -41,6 +41,9 @@ class ObjectLoader:
     def empty_scene(self):
         return self._remove_object()
     
+    def get_current_object(self):
+        return self.current_object
+    
     def _spawn_object(self, pose):
         if pose is None:
             pose = self._sample_pose()

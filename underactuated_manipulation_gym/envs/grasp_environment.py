@@ -3,9 +3,9 @@ import numpy as np
 import cv2
 import pybullet as p
 
-from underactuated_manipulation_gym.envs.base_env import BaseManipulationEnvironment
+from underactuated_manipulation_gym.envs.base_option_environment import BaseOptionEnvironment
 
-class RandomURDFsSOEnvironment(BaseManipulationEnvironment):
+class RandomURDFsSOEnvironment(BaseOptionEnvironment):
     
     def __init__(self, config_file):
         super().__init__(config_file)

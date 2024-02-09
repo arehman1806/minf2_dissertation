@@ -29,6 +29,26 @@
 # left_wheel_back_hinge: 10
 # right_wheel_back_hinge: 11
 
+
+######### POLICY EXECUTORS #########
+policy_executors:
+  grasp:
+    index: 1
+    env_name: RandomURDFsSOEnvironment-v0
+    vec_normalize_path:  /home/rohit/underactuated_manipulation
+    model_path: /home
+    model_class: PPO
+  
+  push:
+    index: 1
+    env_name: PushEnvironment-v0
+    vec_normalize_path:  /home/rohit/underactuated_manipulation
+    model_path: /home
+    model_class: PPO
+
+    
+
+
 ######### ENVIRONMENT #########
 environment:
   episode_length: 500
@@ -39,7 +59,7 @@ environment:
   num_objects: -1
   target_radius: 1
   gui: True
-  experiment_name: some_experiment_name
+  experiment_name: meta_policy
 
 ######### ROBOT #########
 
@@ -108,8 +128,8 @@ robot:
   actuators:
     # joints
     joints: []
-      # - 1
-      # - 2
+      - 1
+      - 2
     gripper: True
     wheel_joints:
       - 8

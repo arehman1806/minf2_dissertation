@@ -3,9 +3,9 @@ import numpy as np
 import cv2
 import pybullet as p
 
-from underactuated_manipulation_gym.envs.base_environment import BaseManipulationEnvironment
+from underactuated_manipulation_gym.envs.base_option_environment import BaseOptionEnvironment
 
-class PushEnvironment(BaseManipulationEnvironment):
+class PushEnvironment(BaseOptionEnvironment):
     
     def __init__(self, config_file):
         super().__init__(config_file)
@@ -14,6 +14,7 @@ class PushEnvironment(BaseManipulationEnvironment):
         self.consecutive_graps = 0
         self.robot_state = None
         self._gripper_enabled = self.robot_config["actuators"]["gripper"]
+        self.cumm_reward = 0
 
     def render(self, mode="human"):
         # Render the environment for logging to tensorboard
@@ -36,31 +37,36 @@ class PushEnvironment(BaseManipulationEnvironment):
             current_joint_commands = action[2:]
         current_vels = np.array([linear_vel, angular_vel])
         diff_vels = abs(current_vels - self.previous_vels)
-        reward += -0.01 * np.sum(diff_vels)
+        # reward += -0.01 * np.sum(diff_vels)
         self.previous_vels = current_vels
         diff_joint_positions = abs(current_joint_commands - self.previous_joint_commands)
-        reward += -0.9 * np.sum(diff_joint_positions)
+        # reward += -0.9 * np.sum(diff_joint_positions)
         self.previous_joint_commands = current_joint_commands
 
         # Penalise movement of the object away from the target and reward movement closer to the target
         distance = self._calculate_object_target_distance()
         if self.previous_distance is None:
             self.previous_distance = distance
-        reward += 1 * (self.previous_distance - distance)
+        reward += 10 * (self.previous_distance - distance)
         self.previous_distance = distance
 
 
         # reward contact to encourage exploration
         contacts = observation["vect_obs"][proprioception_indices["contact"]: proprioception_indices["contact"] + 3]
-        num_contacts = sum(contacts)
-        reward += 0.01 * num_contacts
+        is_contact = sum(contacts) > 0
+        reward += 0.1 * is_contact
         
         # done 
         done = distance < self.environment_config["target_radius"] or self.step_i >= self._episode_length
         if done:
-            print("object within 1m of target: ", distance < self.environment_config["target_radius"])
             self.previous_distance = None
-
+            if distance < self.environment_config["target_radius"]:
+                reward += 300
+            print("object within 1m of target: ", distance < self.environment_config["target_radius"], "reward", self.cumm_reward)
+        # print(reward)
+        self.cumm_reward += reward
+        if done:
+            self.cumm_reward = 0
         return reward, done
     
     def _calculate_action(self, action):

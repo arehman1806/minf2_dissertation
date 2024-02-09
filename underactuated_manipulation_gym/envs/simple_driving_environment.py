@@ -2,9 +2,9 @@ from gymnasium import spaces
 import numpy as np
 import cv2
 
-from underactuated_manipulation_gym.envs.base_environment import BaseManipulationEnvironment
+from underactuated_manipulation_gym.envs.base_option_environment import BaseOptionEnvironment
 
-class DifferentialDriveEnv(BaseManipulationEnvironment):
+class DifferentialDriveEnv(BaseOptionEnvironment):
     
     def __init__(self):
         super().__init__()

@@ -6,44 +6,15 @@ import pybullet_data
 import cv2
 import yaml
 
-from underactuated_manipulation_gym.resources.queenie.robot_env_interface import Queenie_Robot
+from underactuated_manipulation_gym.resources.queenie.robot_env_interface import QueenieRobotEnvInterface
+from underactuated_manipulation_gym.resources.queenie.robot import QueenieRobot
 from underactuated_manipulation_gym.resources.plane import Plane
-from underactuated_manipulation_gym.resources.objects.man_object import ObjectMan
 from underactuated_manipulation_gym.resources.objects.object_loader import ObjectLoader
 from underactuated_manipulation_gym.resources.target import Target
 
-class BaseManipulationEnvironment(gym.Env):
-    def __init__(self, config_file):
-        if config_file is None:
-            raise Exception("No config file provided")
-        super(BaseManipulationEnvironment, self).__init__()
-        config = self._parse_config(config_file)
-        self.robot_config = config["robot"]
-        self.environment_config = config["environment"]
-        render_gui = self.environment_config["gui"]
-        connection_mode = p.GUI if render_gui else p.DIRECT
-        self.client = p.connect(connection_mode)
-        p.setGravity(0,0,-10)
-        p.setRealTimeSimulation(0)
-        # p.setTimeStep(1./500)
-        self.robot = Queenie_Robot(self.client, self.robot_config)
-        self.plane = Plane(self.client)
-        self.object_loader = ObjectLoader(self.client, "random_urdfs", 
-                                          num_objects=self.environment_config["num_objects"], 
-                                          specific_objects=self.environment_config["specific_objects"],
-                                          global_scale=self.environment_config["global_scale"])
-        self.current_object = self.object_loader.change_object()
-        self.target = Target(self.client, ([5,5,0.0], [0,0,0,1]))
-
-        self._episode_length = self.environment_config["episode_length"]
-        
-
-        self.observation_space = self._get_observation_space()
-        self.action_space = self._get_action_space()
-
-        self.step_i = 0
-
-        self.previous_distance = None
+class BaseEnvironment(gym.Env):
+    def __init__(self):
+        super(BaseEnvironment, self).__init__()
 
     
 
@@ -65,6 +36,8 @@ class BaseManipulationEnvironment(gym.Env):
         # action = self._calculate_action(action)
 
         self.robot.apply_action(action)
+
+        self.current_object = self.object_loader.get_current_object()
 
         
         for i in range(50):
