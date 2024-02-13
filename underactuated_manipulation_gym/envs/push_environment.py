@@ -108,7 +108,7 @@ class PushEnvironment(BaseOptionEnvironment):
         observation: dict of image_obs and vect_obs
         observation_indices: dict of indices of different proprioception values in the vector observation
     """
-    def _get_observation(self):
+    def get_observation(self):
         self.robot_state = self.robot.get_state()
         image_obs = self.robot_state["image_obs"]
         vect_obs = self.robot_state["proprioception"]
@@ -134,7 +134,7 @@ class PushEnvironment(BaseOptionEnvironment):
         return observation, observation_indices
     
     def _get_observation_space(self):
-        obs_space_dry_run = self._get_observation()
+        obs_space_dry_run = self.get_observation()
         vect_obs_size = obs_space_dry_run[0]["vect_obs"].shape
         image_obs_size = obs_space_dry_run[0]["image_obs"].shape
         min_obs = np.full(vect_obs_size[0], -np.inf)

@@ -7,8 +7,8 @@ from underactuated_manipulation_gym.envs.base_option_environment import BaseOpti
 
 class GraspEnvironment(BaseOptionEnvironment):
     
-    def __init__(self, config_file):
-        super().__init__(config_file)
+    def __init__(self, config_file, controllers=None, as_subpolicy=False):
+        super().__init__(config_file, controllers=controllers, as_subpolicy=as_subpolicy)
         self.previous_vels = np.array([0, 0])
         self.previous_joint_commands = np.array(len(self._robot_config["actuators"]["joints"]) * [0])
         self.consecutive_graps = 0
@@ -90,7 +90,7 @@ class GraspEnvironment(BaseOptionEnvironment):
         # return action
 
     
-    def _get_observation(self):
+    def get_observation(self):
         self.robot_state = self.robot.get_state()
         image_obs = self.robot_state["image_obs"]
         vect_obs = self.robot_state["proprioception"]
@@ -122,8 +122,8 @@ class GraspEnvironment(BaseOptionEnvironment):
 
 class GraspEnvironment1(GraspEnvironment):
 
-    def __init__(self, config_file):
-        super().__init__(config_file)
+    def __init__(self, config_file, controllers=None, as_subpolicy=False):
+        super().__init__(config_file, controllers=controllers, as_subpolicy=as_subpolicy)
 
     def _reward(self, observation, proprioception_indices, action):
         done = False

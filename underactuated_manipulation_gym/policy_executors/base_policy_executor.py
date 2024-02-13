@@ -13,23 +13,26 @@ import yaml
 class BasePolicyExecutor:
     def __init__(self, env_config_file_path, controllers) -> None:
         self._env_config = self._parse_config(env_config_file_path)["environment"]
-        self._env = self._create_env(env_config_file_path, controllers)
+        self._original_env, self._env = self._create_env(env_config_file_path, controllers)
         self._model = self._load_model()
     
     def execute_policy(self, steps=-1):
         done = False
-        s = self._env._get_observation()[0]
-        if s in self._env.initial_state(s):
-            done = True
-            obs = s
-            rewards = -1
+        obs = self._env.reset()
+        # s = self._env._get_observation()[0]
+        # if s in self._env.initial_state(s):
+        #     done = True
+        #     obs = s
+        #     rewards = -1
         rewards = 0
         if steps == -1:
             steps = 1e6
         
         while not done and steps > 0:
-            action, _state = self._model.predict(obs)
+            action, _state = self._model.predict(obs, deterministic=True)
             obs, reward, done, _ = self._env.step(action)
+            reward = reward[0]
+            done = done[0]
             rewards += reward
             steps -= 1
             if done:
@@ -40,11 +43,11 @@ class BasePolicyExecutor:
     def _create_env(self, env_config_file_path, controllers):
         env_name = self._env_config["name"]
         # vec_normalze_path = self._env_config["vec_normalize_path"]
-        env = gym.make(f"queenie_gym_envs/{env_name}", config_file=env_config_file_path, controllers=controllers, as_subpolicy=True)
-        env = DummyVecEnv([lambda: env])
+        original_env = gym.make(f"queenie_gym_envs/{env_name}", config_file=env_config_file_path, controllers=controllers, as_subpolicy=True)
+        wrapped_env = DummyVecEnv([lambda: original_env])
         # env = VecNormalize(env, norm_obs=False, norm_reward=False, norm_obs_keys=["vect_obs"])
         # env.load(vec_normalze_path, env)
-        return env
+        return original_env, wrapped_env
     
     def _load_model(self):
         model_path = self._env_config["model_path"]

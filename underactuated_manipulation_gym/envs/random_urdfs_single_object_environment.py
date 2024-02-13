@@ -90,7 +90,7 @@ class RandomURDFsSOEnvironment(BaseOptionEnvironment):
         # return action
 
     
-    def _get_observation(self):
+    def get_observation(self):
         self.robot_state = self.robot.get_state()
         image_obs = self.robot_state["image_obs"]
         vect_obs = self.robot_state["proprioception"]

@@ -6,10 +6,13 @@ from stable_baselines3 import SAC, PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3.common.monitor import Monitor
-import underactuated_manipulation_gym
 # from video_record_callback import VideoRecorderCallback
 import time
 import numpy as np
+import sys
+sys.path.append("/home/arehman/dissertation/")
+import underactuated_manipulation_gym
+from rule_based_policies.meta import FSMMetaPolicy
 
 # IMPORTANT. edit this before every run:
 tb_log_name = "meta_first_experiment"

@@ -15,7 +15,7 @@ register(
 )
 
 register(
-     id="queenie_gym_envs/RandomURDFsSOEnvironment-v1",
+     id="queenie_gym_envs/GraspEnvironment-v1",
      entry_point="underactuated_manipulation_gym.envs:GraspEnvironment1",
      max_episode_steps=100,
 )

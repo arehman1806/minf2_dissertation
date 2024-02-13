@@ -23,8 +23,8 @@ class MetaEnvironment(BaseEnvironment):
         p.setRealTimeSimulation(0)
         # p.setTimeStep(1./500
 
-        robot_object = QueenieRobot(self.client, self._robot_config)
-        self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, robot_object)
+        self.robot_object = QueenieRobot(self.client, self._robot_config)
+        self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, self.robot_object)
         self.target = Target(self.client, ([5,5,0.0], [0,0,0,1]))
         self.plane = Plane(self.client)
         self.object_loader = ObjectLoader(self.client, self._environment_config["object_dataset"], 
@@ -35,6 +35,7 @@ class MetaEnvironment(BaseEnvironment):
         
         self._policy_executors = dict()
         self._load_policy_executors()
+        self._policy_executor_mapping = self._config["policy_executor_mapping"]
 
         self._episode_length = self._environment_config["episode_length"]
         self.observation_space = self._get_observation_space()
@@ -51,9 +52,13 @@ class MetaEnvironment(BaseEnvironment):
         policy_executor = self._policy_executors[action]
         obs, reward, done = policy_executor.execute_policy(steps=-1)
 
-        return obs, reward, done, False, {}
+        object_reahed_target = False
+
+        done = object_reahed_target or self.step_i >= self._episode_length
+
+        return self.get_observation()[0], reward, done, False, {}
         
-    def _get_observation(self):
+    def get_observation(self):
         self.robot_state = self.robot.get_state()
         image_obs = self.robot_state["image_obs"]
         vect_obs = self.robot_state["proprioception"]
@@ -77,6 +82,9 @@ class MetaEnvironment(BaseEnvironment):
         observation = {"image_obs": image_obs, "vect_obs": vect_obs}
 
         return observation, observation_indices
+    
+    def get_num_actions(self):
+        return len(self._policy_executors.keys())
     
 
     def render(self, mode="human"):
@@ -104,7 +112,7 @@ class MetaEnvironment(BaseEnvironment):
         # load the subpolicies from the config file
         # we have a name for each env and then we have the path to the model
         # we need a completely new set of objects. these objects will have the model and the environments
-        controllers = {"robot": self.robot, "plane": self.plane, "object_loader": self.object_loader, "target": self.target}
+        controllers = {"robot": self.robot_object, "plane": self.plane, "object_loader": self.object_loader, "target": self.target, "client": self.client}
         for name, policy_executor in self._config["policy_executors"].items():
             self._policy_executors[policy_executor["index"]] = BasePolicyExecutor(policy_executor["env_config_file"], controllers)
 
@@ -115,7 +123,7 @@ class MetaEnvironment(BaseEnvironment):
         return spaces.Discrete(num_options)
     
     def _get_observation_space(self):
-        obs_space_dry_run = self._get_observation()
+        obs_space_dry_run = self.get_observation()
         vect_obs_size = obs_space_dry_run[0]["vect_obs"].shape
         image_obs_size = obs_space_dry_run[0]["image_obs"].shape
         min_obs = np.full(vect_obs_size[0], -np.inf)

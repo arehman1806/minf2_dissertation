@@ -31,7 +31,7 @@ class BaseEnvironment(gym.Env):
         for _ in range(100):
             p.stepSimulation()
         # Return the initial observation
-        return self._get_observation()[0], {}
+        return self.get_observation()[0], {}
 
     def step(self, action):
 
@@ -46,7 +46,7 @@ class BaseEnvironment(gym.Env):
             p.stepSimulation()
 
         # Get the new observation after taking the action
-        observation, proprioception_indices = self._get_observation()
+        observation, proprioception_indices = self.get_observation()
 
         # Define your reward and done criteria
         reward, done = self._reward(observation, proprioception_indices, action)
@@ -79,7 +79,7 @@ class BaseEnvironment(gym.Env):
         
         return distance
 
-    def _get_observation(self):
+    def get_observation(self):
         raise NotImplementedError
     
     def _calculate_action(self, action):

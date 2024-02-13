@@ -19,8 +19,8 @@ class BaseOptionEnvironment(BaseEnvironment):
         if config_file is None:
             raise Exception("No config file provided")
         super(BaseOptionEnvironment, self).__init__(config_file)
-
-        if not as_subpolicy:
+        self._as_subpolicy = as_subpolicy
+        if not self._as_subpolicy:
             render_gui = self._environment_config["gui"]
             connection_mode = p.GUI if render_gui else p.DIRECT
             self.client = p.connect(connection_mode)
@@ -38,7 +38,8 @@ class BaseOptionEnvironment(BaseEnvironment):
             self.current_object = self.object_loader.change_object()
             self.target = Target(self.client, ([5,5,0.0], [0,0,0,1]))
         else:
-            self.robot = controllers["robot"]
+            self.client = controllers["client"]
+            self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, controllers["robot"])
             self.plane = controllers["plane"]
             self.object_loader = controllers["object_loader"]
             self.target = controllers["target"]
@@ -53,10 +54,26 @@ class BaseOptionEnvironment(BaseEnvironment):
 
         self.previous_distance = None
     
+    def reset(self, seed=None):
+        # Reset the environment to its initial state
+        self.step_i = 0
+        if self._as_subpolicy:
+            self.current_object = self.object_loader.get_current_object()
+            return self.get_observation()[0], {}
+        pos = [0, 0, 0.4]
+        orn = p.getQuaternionFromEuler([0, 0, 0])
+        self.robot.reset(pos, orn)
+        self.current_object = self.object_loader.change_object()
+        self.target.reset_position(None)
+        for _ in range(100):
+            p.stepSimulation()
+        # Return the initial observation
+        return self.get_observation()[0], {}
+    
     def _reward(self, observation, proprioception_indices, action):
         raise NotImplementedError
 
-    def _get_observation(self):
+    def get_observation(self):
         raise NotImplementedError
     
     def _calculate_action(self, action):

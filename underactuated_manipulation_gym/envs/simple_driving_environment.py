@@ -36,7 +36,7 @@ class DifferentialDriveEnv(BaseOptionEnvironment):
         return action
 
     
-    def _get_observation(self):
+    def get_observation(self):
         robot_state = self.robot.get_state()
         object_state = self.current_object.get_state()
         # convert robot_state to environment_state (i.e. observation)

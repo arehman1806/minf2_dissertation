@@ -33,7 +33,10 @@
 
 ######### ENVIRONMENT #########
 environment:
- 
+  name: PushEnvironment-v0
+  model_class: PPO
+  model_path: ./runs/push/no_normalize_single_object_push_256x3_networks/no_normalize_single_object_push_256x3_networks_850000_steps
+  vec_normalize_path: null
   episode_length: 500
   episode_length_test: 200
   object_dataset: random_urdfs
@@ -42,7 +45,7 @@ environment:
   num_objects: 5
   target_radius: 1
   gui: false
-  
+
 ######### ROBOT #########
 robot:
 ######### ROBOT PARAMETERS #########
