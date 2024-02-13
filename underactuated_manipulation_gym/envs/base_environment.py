@@ -13,9 +13,11 @@ from underactuated_manipulation_gym.resources.objects.object_loader import Objec
 from underactuated_manipulation_gym.resources.target import Target
 
 class BaseEnvironment(gym.Env):
-    def __init__(self):
+    def __init__(self, config_file):
         super(BaseEnvironment, self).__init__()
-
+        self._config = self._parse_config(config_file)
+        self._robot_config = self._config["robot"]
+        self._environment_config = self._config["environment"]
     
 
     def reset(self, seed=None):

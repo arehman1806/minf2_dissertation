@@ -5,15 +5,15 @@ import pybullet as p
 
 from underactuated_manipulation_gym.envs.base_option_environment import BaseOptionEnvironment
 
-class RandomURDFsSOEnvironment(BaseOptionEnvironment):
+class GraspEnvironment(BaseOptionEnvironment):
     
     def __init__(self, config_file):
         super().__init__(config_file)
         self.previous_vels = np.array([0, 0])
-        self.previous_joint_commands = np.array(len(self.robot_config["actuators"]["joints"]) * [0])
+        self.previous_joint_commands = np.array(len(self._robot_config["actuators"]["joints"]) * [0])
         self.consecutive_graps = 0
         self.robot_state = None
-        self._gripper_enabled = self.robot_config["actuators"]["gripper"]
+        self._gripper_enabled = self._robot_config["actuators"]["gripper"]
 
     def render(self, mode="human"):
         # Render the environment for logging to tensorboard
@@ -64,17 +64,17 @@ class RandomURDFsSOEnvironment(BaseOptionEnvironment):
         # this is followed by actuated neck joints and gripper (if gripper is enabled)
         v, w_angular = action[:2]
         # scale the linear and angular velocity
-        v = v * self.robot_config["max_linear_velocity"]
-        w_angular = w_angular * self.robot_config["max_angular_velocity"]
+        v = v * self._robot_config["max_linear_velocity"]
+        w_angular = w_angular * self._robot_config["max_angular_velocity"]
         v_left = v - w_angular * 0.6 / 2
         v_right = v + w_angular * 0.6 / 2
         
         # actions predicted by network are between -1 and 1
         a = -1
         b = 1
-        for i, joint in enumerate(self.robot_config["actuaters"]["joints"]):
-            c = self.robot_config["parameters"][joint]["min"]
-            d = self.robot_config["parameters"][joint]["max"]
+        for i, joint in enumerate(self._robot_config["actuaters"]["joints"]):
+            c = self._robot_config["parameters"][joint]["min"]
+            d = self._robot_config["parameters"][joint]["max"]
             # formula for converting from one range to another
             action[i+2] = c + ((d - c)*(action[i+2] - a)/(b - a))
         
@@ -120,7 +120,7 @@ class RandomURDFsSOEnvironment(BaseOptionEnvironment):
         return spaces.Dict({"image_obs": image_obs, "vect_obs": vect_obs})
         # return spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)
 
-class RandomURDFsSOEnvironment1(RandomURDFsSOEnvironment):
+class GraspEnvironment1(GraspEnvironment):
 
     def __init__(self, config_file):
         super().__init__(config_file)

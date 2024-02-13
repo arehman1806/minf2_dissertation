@@ -7,13 +7,13 @@ from underactuated_manipulation_gym.envs.base_option_environment import BaseOpti
 
 class PushEnvironment(BaseOptionEnvironment):
     
-    def __init__(self, config_file):
-        super().__init__(config_file)
+    def __init__(self, config_file, controllers=None, as_subpolicy=False):
+        super().__init__(config_file, controllers=controllers, as_subpolicy=as_subpolicy)
         self.previous_vels = np.array([0, 0])
-        self.previous_joint_commands = np.array(len(self.robot_config["actuators"]["joints"]) * [0])
+        self.previous_joint_commands = np.array(len(self._robot_config["actuators"]["joints"]) * [0])
         self.consecutive_graps = 0
         self.robot_state = None
-        self._gripper_enabled = self.robot_config["actuators"]["gripper"]
+        self._gripper_enabled = self._robot_config["actuators"]["gripper"]
         self.cumm_reward = 0
 
     def render(self, mode="human"):
@@ -57,12 +57,12 @@ class PushEnvironment(BaseOptionEnvironment):
         reward += 0.1 * is_contact
         
         # done 
-        done = distance < self.environment_config["target_radius"] or self.step_i >= self._episode_length
+        done = distance < self._environment_config["target_radius"] or self.step_i >= self._episode_length
         if done:
             self.previous_distance = None
-            if distance < self.environment_config["target_radius"]:
+            if distance < self._environment_config["target_radius"]:
                 reward += 300
-            print("object within 1m of target: ", distance < self.environment_config["target_radius"], "reward", self.cumm_reward)
+            print("object within 1m of target: ", distance < self._environment_config["target_radius"], "reward", self.cumm_reward)
         # print(reward)
         self.cumm_reward += reward
         if done:
@@ -74,17 +74,17 @@ class PushEnvironment(BaseOptionEnvironment):
         # this is followed by actuated neck joints and gripper (if gripper is enabled)
         v, w_angular = action[:2]
         # scale the linear and angular velocity
-        v = v * self.robot_config["max_linear_velocity"]
-        w_angular = w_angular * self.robot_config["max_angular_velocity"]
+        v = v * self._robot_config["max_linear_velocity"]
+        w_angular = w_angular * self._robot_config["max_angular_velocity"]
         v_left = v - w_angular * 0.6 / 2
         v_right = v + w_angular * 0.6 / 2
         
         # actions predicted by network are between -1 and 1
         a = -1
         b = 1
-        for i, joint in enumerate(self.robot_config["actuaters"]["joints"]):
-            c = self.robot_config["parameters"][joint]["min"]
-            d = self.robot_config["parameters"][joint]["max"]
+        for i, joint in enumerate(self._robot_config["actuaters"]["joints"]):
+            c = self._robot_config["parameters"][joint]["min"]
+            d = self._robot_config["parameters"][joint]["max"]
             # formula for converting from one range to another
             action[i+2] = c + ((d - c)*(action[i+2] - a)/(b - a))
         

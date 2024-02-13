@@ -1,4 +1,5 @@
 # from underactuated_manipulation_gym.envs.base_environment import BaseManipulationEnvironment
 from underactuated_manipulation_gym.envs.simple_driving_environment import DifferentialDriveEnv
-from underactuated_manipulation_gym.envs.grasp_environment import RandomURDFsSOEnvironment, RandomURDFsSOEnvironment1
+from underactuated_manipulation_gym.envs.grasp_environment import GraspEnvironment, GraspEnvironment1
 from underactuated_manipulation_gym.envs.push_environment import PushEnvironment
+from underactuated_manipulation_gym.envs.meta_environment import MetaEnvironment

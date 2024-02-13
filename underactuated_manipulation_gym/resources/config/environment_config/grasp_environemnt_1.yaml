@@ -31,19 +31,19 @@
 
 ######### ENVIRONMENT #########
 environment:
+  name: GraspEnvironment-v1
+  model_class: SAC
+  model_path: ./runs/grasp/testing_videos/testing_videos_450000_steps.zip
   episode_length: 100
   episode_length_test: 100
   object_dataset: random_urdfs
-  global_scale: 8.0
+  global_scale: 4.0
   specific_objects: [] # this has to be empty if num_objects is not -1
   num_objects: 100
   gui: True
-  experiment_name: some_experiment_name
 
 ######### ROBOT #########
-
 robot:
-
 ######### ROBOT PARAMETERS #########
   parameters:
     max_linear_velocity: 2
@@ -72,8 +72,8 @@ robot:
   sensors:
    
     camera:
-      depth: True
-      rgb: False
+      depth: False
+      rgb: True
       greyscale: False
       semantic: False
       camera_near: 0.005
@@ -99,7 +99,7 @@ robot:
         - 4
         - 5
       contact_force: False
-      normal_angle: False
+      normal_angle: True
       normal_angle_palm: False
 
   ######### ACTUATORS #########
@@ -109,7 +109,7 @@ robot:
     joints:
       - 1
       - 2
-    gripper: False
+    gripper: True
     wheel_joints:
       - 8
       - 9

@@ -35,7 +35,8 @@ policy_executors:
   grasp:
     index: 1
     env_name: RandomURDFsSOEnvironment-v0
-    vec_normalize_path:  /home/rohit/underactuated_manipulation
+    env_config_file: underactuated_manipulation_gym/resources/config/environment_config/push_environment.yaml
+    vec_normalize_path: /home/rohit/underactuated_manipulation
     model_path: /home
     model_class: PPO
   
@@ -127,7 +128,7 @@ robot:
 
   actuators:
     # joints
-    joints: []
+    joints:
       - 1
       - 2
     gripper: True

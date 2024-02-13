@@ -18,26 +18,23 @@ class BaseOptionEnvironment(BaseEnvironment):
     def __init__(self, config_file, controllers=None, as_subpolicy=False):
         if config_file is None:
             raise Exception("No config file provided")
-        super(BaseOptionEnvironment, self).__init__()
-        config = self._parse_config(config_file)
-        self.robot_config = config["robot"]
-        self.environment_config = config["environment"]
+        super(BaseOptionEnvironment, self).__init__(config_file)
 
         if not as_subpolicy:
-            render_gui = self.environment_config["gui"]
+            render_gui = self._environment_config["gui"]
             connection_mode = p.GUI if render_gui else p.DIRECT
             self.client = p.connect(connection_mode)
             p.setGravity(0,0,-10)
             p.setRealTimeSimulation(0)
             # p.setTimeStep(1./500
 
-            robot_object = QueenieRobot(self.client, self.robot_config)
-            self.robot = QueenieRobotEnvInterface(self.client, self.robot_config, robot_object)
+            robot_object = QueenieRobot(self.client, self._robot_config)
+            self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, robot_object)
             self.plane = Plane(self.client)
             self.object_loader = ObjectLoader(self.client, "random_urdfs", 
-                                            num_objects=self.environment_config["num_objects"], 
-                                            specific_objects=self.environment_config["specific_objects"],
-                                            global_scale=self.environment_config["global_scale"])
+                                            num_objects=self._environment_config["num_objects"], 
+                                            specific_objects=self._environment_config["specific_objects"],
+                                            global_scale=self._environment_config["global_scale"])
             self.current_object = self.object_loader.change_object()
             self.target = Target(self.client, ([5,5,0.0], [0,0,0,1]))
         else:
@@ -47,7 +44,7 @@ class BaseOptionEnvironment(BaseEnvironment):
             self.target = controllers["target"]
             self.current_object = self.object_loader.get_current_object()
 
-        self._episode_length = self.environment_config["episode_length"]
+        self._episode_length = self._environment_config["episode_length"]
         
         self.observation_space = self._get_observation_space()
         self.action_space = self._get_action_space()
@@ -58,12 +55,17 @@ class BaseOptionEnvironment(BaseEnvironment):
     
     def _reward(self, observation, proprioception_indices, action):
         raise NotImplementedError
-    
 
     def _get_observation(self):
         raise NotImplementedError
     
     def _calculate_action(self, action):
+        raise NotImplementedError
+    
+    def terminal_state(self, s):
+        raise NotImplementedError
+    
+    def initial_state(self, s):
         raise NotImplementedError
     
     def render(self, mode='human'):

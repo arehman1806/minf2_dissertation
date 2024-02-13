@@ -1,3 +1,5 @@
+# THIS CONFIGURATION IS TASK SPECIFIC. IT IS USED TO SPECIFY THE ENVIRONMENT, ROBOT, SENSORS AND ACTUATORS FOR THE PUSH TASK.
+
 ######### LINK INDEXES TO BE USED IN THIS FILE. THESE WILL REMAIN CONSTANT UNLESS WE CHANGE THE URDF #########
 
 # chassis: -1
@@ -31,20 +33,18 @@
 
 ######### ENVIRONMENT #########
 environment:
+ 
   episode_length: 500
   episode_length_test: 200
   object_dataset: random_urdfs
   global_scale: 8.0
-  specific_objects: [1] # this has to be empty if num_objects is not -1
-  num_objects: -1
+  specific_objects: [] # this has to be empty if num_objects is not -1
+  num_objects: 5
   target_radius: 1
-  gui: True
-  experiment_name: some_experiment_name
-
+  gui: false
+  
 ######### ROBOT #########
-
 robot:
-
 ######### ROBOT PARAMETERS #########
   parameters:
     max_linear_velocity: 2

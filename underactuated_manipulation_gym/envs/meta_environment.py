@@ -1,29 +1,22 @@
 from underactuated_manipulation_gym.envs.base_option_environment import BaseEnvironment
-from policy_executors.base_policy_executor import BasePolicyExecutor
-from resources.queenie.robot import QueenieRobot
-from resources.queenie.robot_env_interface import QueenieRobotEnvInterface
-from resources.plane import Plane
-from resources.objects.object_loader import ObjectLoader
-from resources.target import Target
+from underactuated_manipulation_gym.policy_executors.base_policy_executor import BasePolicyExecutor
+from underactuated_manipulation_gym.resources.queenie.robot import QueenieRobot
+from underactuated_manipulation_gym.resources.queenie.robot_env_interface import QueenieRobotEnvInterface
+from underactuated_manipulation_gym.resources.plane import Plane
+from underactuated_manipulation_gym.resources.objects.object_loader import ObjectLoader
+from underactuated_manipulation_gym.resources.target import Target
 import gymnasium as gym
+from gymnasium import spaces
 import pybullet as p
 import yaml
 import numpy as np
 
 class MetaEnvironment(BaseEnvironment):
 
-    def __init__(self, config):
-        super(MetaEnvironment, self).__init__()
+    def __init__(self, config_file):
+        super(MetaEnvironment, self).__init__(config_file)
 
-        # figure out a way to loadsubpolicies from yaml file. each policy or subenv will be given a number and a name
-        # network will predict action 3. what will that action correspond to? so we need to do the mapping
-        # we need to figure out how to do the mapping of the action to the subpolicy
-
-        self._config = self._parse_config(config)
-        self._robot_config = self._config["robot"]
-        self._environment_config = self._config["environment"]
-
-        render_gui = self.environment_config["gui"]
+        render_gui = self._environment_config["gui"]
         connection_mode = p.GUI if render_gui else p.DIRECT
         self.client = p.connect(connection_mode)
         p.setGravity(0,0,-10)
@@ -39,6 +32,9 @@ class MetaEnvironment(BaseEnvironment):
                                         specific_objects=self._environment_config["specific_objects"],
                                         global_scale=self._environment_config["global_scale"])
         self.current_object = self.object_loader.change_object()
+        
+        self._policy_executors = dict()
+        self._load_policy_executors()
 
         self._episode_length = self._environment_config["episode_length"]
         self.observation_space = self._get_observation_space()
@@ -47,19 +43,11 @@ class MetaEnvironment(BaseEnvironment):
         self.previous_distance = None
         self.robot_state = None
 
-        self._policy_executors = dict()
-        self._load_policy_executors()
-
 
 
     
     def step(self, action):
         # action will be the index of the subpolicy to be used
-        # Two options:
-        # 1. run the subpolicy until it finishes and then return the observation, reward, done, info
-        # 2. run the subpolicy for a fixed number of steps and then return the observation, reward, done, info
-        # we will go with the first option for now
-        # we will call the execute_policy method of the subpolicy and return the results
         policy_executor = self._policy_executors[action]
         obs, reward, done = policy_executor.execute_policy(steps=-1)
 
@@ -116,5 +104,22 @@ class MetaEnvironment(BaseEnvironment):
         # load the subpolicies from the config file
         # we have a name for each env and then we have the path to the model
         # we need a completely new set of objects. these objects will have the model and the environments
-        for policy_executor in self._config["policy_executors"]:
-            self._policy_executors[policy_executor["index"]] = BasePolicyExecutor(policy_executor["env_name"], policy_executor["vec_normalze_path"], policy_executor["model_path"], policy_executor["model_class"])
+        controllers = {"robot": self.robot, "plane": self.plane, "object_loader": self.object_loader, "target": self.target}
+        for name, policy_executor in self._config["policy_executors"].items():
+            self._policy_executors[policy_executor["index"]] = BasePolicyExecutor(policy_executor["env_config_file"], controllers)
+
+    
+    def _get_action_space(self):
+        # Define the action space for the meta environment
+        num_options = len(self._policy_executors)
+        return spaces.Discrete(num_options)
+    
+    def _get_observation_space(self):
+        obs_space_dry_run = self._get_observation()
+        vect_obs_size = obs_space_dry_run[0]["vect_obs"].shape
+        image_obs_size = obs_space_dry_run[0]["image_obs"].shape
+        min_obs = np.full(vect_obs_size[0], -np.inf)
+        max_obs = np.full(vect_obs_size[0], np.inf)
+        image_obs = spaces.Box(low=0, high=255, shape=image_obs_size, dtype=np.uint8)
+        vect_obs = spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
+        return spaces.Dict({"image_obs": image_obs, "vect_obs": vect_obs})
