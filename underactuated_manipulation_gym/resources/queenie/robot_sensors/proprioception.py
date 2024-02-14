@@ -7,8 +7,8 @@ from ..utils import get_link_index, get_joint_index
 
 class Proprioception_Sensor(Sensor):
 
-    def __init__(self, client, robot, sensor_name, sensor_params):
-        super().__init__(robot, sensor_name, sensor_params)
+    def __init__(self, client, robot, sensor_name, sensor_params, robot_params):
+        super().__init__(robot, sensor_name, sensor_params, robot_params)
         self.client = client
 
         self._left_finger_index = get_link_index(self.robot, "left_finger")
@@ -47,9 +47,12 @@ class Proprioception_Sensor(Sensor):
 
         if self._report_lin_ang_vel:
             lin_vel, ang_vel = p.getBaseVelocity(self.robot, self.client)
+            lin_vel, ang_vel = np.linalg.norm(lin_vel), np.linalg.norm(ang_vel)
+            lin_vel = self._normalize_observation(lin_vel, self._robot_params["min_linear_velocity"], self._robot_params["max_linear_velocity"])
+            ang_vel = self._normalize_observation(ang_vel, self._robot_params["min_angular_velocity"], self._robot_params["max_angular_velocity"])
             # print(f"lin_vel: {lin_vel}, ang_vel: {ang_vel}")
-            observation.append(np.linalg.norm(lin_vel))
-            observation.append(np.linalg.norm(ang_vel))
+            observation.append(lin_vel)
+            observation.append(ang_vel)
             indices["lin_ang_velocity"] = 0
         
         joint_positions = []
@@ -57,8 +60,15 @@ class Proprioception_Sensor(Sensor):
         jrfs = []
         jmts = []
         joint_states = p.getJointStates(self.robot, self.joints, physicsClientId=self.client) if len(self.joints) > 0 else []
-        for joint_state in joint_states:
-            joint_positions.append(joint_state[0])
+        for i, joint_state in enumerate(joint_states):
+            joint_position = joint_state[0]
+            if self.joints[i] in self._robot_params["gripper"]["joints"]:
+                joint_position = self._normalize_observation(joint_position, self._robot_params["gripper"]["min"], self._robot_params["gripper"]["max"])
+            else:
+                joint_position = self._normalize_observation(joint_position, self._robot_params["joint_params"][self.joints[i]]["min"], self._robot_params["joint_params"][self.joints[i]]["max"])
+            joint_positions.append(joint_position)
+
+            ##### rest is not normalized yet #####
             joint_velocities.append(joint_state[1])
             jrfs.extend(joint_state[2])
             jmts.append(joint_state[3])
@@ -78,6 +88,7 @@ class Proprioception_Sensor(Sensor):
         contact_points_left_finger = None
         contact_points_right_finger = None
         contact_points_palm = None
+        ### contacts are normalized but contact forces cannot be normalized
         contacts = []
         contact_forces = []
         for link in self._contact_links:
@@ -100,20 +111,24 @@ class Proprioception_Sensor(Sensor):
             indices["contact_force"] = len(observation)
             observation.extend(contact_forces)
         
+        ### normalized
         if self._report_normal_angle:
             angle_bw_norms = 0
             if len(contact_points_left_finger) > 0 and len(contact_points_right_finger) > 0:
                 left_norm = self._calculate_contact_norm(contact_points_left_finger)
                 right_norm = self._calculate_contact_norm(contact_points_right_finger)
                 angle_bw_norms = np.arccos(np.clip(np.dot(left_norm, right_norm), -1.0, 1.0))
+                angle_bw_norms = self._normalize_observation(angle_bw_norms, 0, np.pi)
             indices["normal_angle"] = len(observation)
             observation.append(angle_bw_norms)
         
+        ### normalized
         if self._report_normal_angle_palm:
             angle = 0
             if len(contact_points_palm) > 0:
                 palm_norm = self._calculate_contact_norm(contact_points_palm)
                 
+                ### normalized
                 # transform the palm norm from world frame to palm frame and find out the angle it makes with y axis of palm frame
                 _, palm_orientation_quat, _, _, _, _  = p.getLinkState(self.robot, self._palm_index, physicsClientId=self.client)
                 palm_orientation_euler = p.getEulerFromQuaternion(palm_orientation_quat)
@@ -122,6 +137,7 @@ class Proprioception_Sensor(Sensor):
                 print(f"palm_y_axis_world_normalized: {palm_y_axis_world_normalized} palm_norm: {palm_norm}")
                 cos_theta = np.dot(palm_norm, palm_y_axis_world_normalized)
                 angle = np.arccos(cos_theta)
+                angle = self._normalize_observation(angle, 0, np.pi)
                 print("Angle in radians:", angle)
             indices["normal_angle_palm"] = len(observation)
             observation.append(angle)

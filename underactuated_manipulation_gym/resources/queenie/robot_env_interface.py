@@ -132,9 +132,9 @@ class QueenieRobotEnvInterface():
         self.sensors = {}
         for sensor_name, sensor_params in self._config["sensors"].items():
             if sensor_name == "camera":
-                self.sensors[sensor_name] = Camera_Sensor(self.client, self.robot, sensor_name, sensor_params)
+                self.sensors[sensor_name] = Camera_Sensor(self.client, self.robot, sensor_name, sensor_params, self._config["parameters"])
             elif sensor_name == "proprioception":
-                self.sensors[sensor_name] = Proprioception_Sensor(self.client, self.robot, sensor_name, sensor_params)
+                self.sensors[sensor_name] = Proprioception_Sensor(self.client, self.robot, sensor_name, sensor_params, self._config["parameters"])
             else:
                 raise NotImplementedError(f"Sensor {sensor_name} not implemented")
         return

@@ -8,8 +8,8 @@ from ..utils import get_link_index
 
 class Camera_Sensor(Sensor):
 
-    def __init__(self, client, robot, sensor_name, sensor_params):
-        super().__init__(robot, sensor_name, sensor_params)
+    def __init__(self, client, robot, sensor_name, sensor_params, robot_params):
+        super().__init__(robot, sensor_name, sensor_params, robot_params)
         self.client = client
         self.dim_obs_space = self._setup_camera()
 
