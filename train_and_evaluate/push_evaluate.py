@@ -2,6 +2,8 @@ import gymnasium as gym
 from stable_baselines3 import SAC, PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
+import sys
+sys.path.append("/home/arehman/dissertation/")
 import underactuated_manipulation_gym
 # from video_record_callback import VideoRecorderCallback
 import time

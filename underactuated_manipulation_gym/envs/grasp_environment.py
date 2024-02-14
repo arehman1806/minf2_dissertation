@@ -169,8 +169,8 @@ class GraspEnvironment1(GraspEnvironment):
 
         # reward correct grasp
         angle_bw_contact_norms = observation["vect_obs"][proprioception_indices["normal_angle"]]
-        if abs(angle_bw_contact_norms) > 3 * np.pi / 4 and action[-1] <= 0:
-            reward += 1000
+        if abs(angle_bw_contact_norms) > 3 / 4 and action[-1] <= 0:
+            reward += 300
             done = True
             print("grasp successful")
             # self.consecutive_graps += 1
