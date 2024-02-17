@@ -110,7 +110,7 @@ class PushEnvironment(BaseOptionEnvironment):
     """
     def get_observation(self):
         self.robot_state = self.robot.get_state()
-        image_obs = self.robot_state["image_obs"]
+        image_obs = self.robot_state["camera"]
         vect_obs = self.robot_state["proprioception"]
         observation_indices = self.robot_state["proprioception_indices"]
         object_pose = self.current_object.get_base_pose()[0]

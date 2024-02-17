@@ -36,14 +36,15 @@ class BasePolicyExecutor:
             rewards += reward
             steps -= 1
             if done:
+                print(f"Finished policy {self._env_config['name']}")
                 return obs, rewards, done
-        
         return obs, rewards, done
     
     def _create_env(self, env_config_file_path, controllers):
         env_name = self._env_config["name"]
         # vec_normalze_path = self._env_config["vec_normalize_path"]
         original_env = gym.make(f"queenie_gym_envs/{env_name}", config_file=env_config_file_path, controllers=controllers, as_subpolicy=True)
+        _ = original_env.reset()
         wrapped_env = DummyVecEnv([lambda: original_env])
         # env = VecNormalize(env, norm_obs=False, norm_reward=False, norm_obs_keys=["vect_obs"])
         # env.load(vec_normalze_path, env)

@@ -2,6 +2,7 @@ import pybullet as p
 import numpy as np
 import math
 import cv2
+import open3d as o3d
 from .sensor import Sensor
 from ..utils import get_link_index
 
@@ -26,6 +27,18 @@ class Camera_Sensor(Sensor):
         self.camera_far = self._sensor_params["camera_far"]
         self.resolution = self._sensor_params["resolution"]
         self.fov = self._sensor_params["fov"]
+
+        self.previous_bodies = []
+        self.do_vis = False
+        # if "pcd" in self._sensor_params.keys():
+        #     self.vis = o3d.visualization.Visualizer()
+        #     self.vis.create_window()
+        #     pcd = o3d.geometry.PointCloud()
+        #     points = np.random.rand(100, 3)  # Dummy point cloud data
+        #     pcd.points = o3d.utility.Vector3dVector(points)
+        #     self.vis.add_geometry(pcd)
+        #     self.do_vis = True
+        
         self.current_rgb_image = np.zeros((self.resolution, self.resolution, 3))
         self.current_depth_image = np.zeros((self.resolution, self.resolution, 1))
         self.intrinsic_matrix = self._calculate_intrinsic_matrix()
@@ -34,6 +47,7 @@ class Camera_Sensor(Sensor):
     
     def get_observation(self):
         # Get the POV of the "camera" link
+
         link_state = p.getLinkState(self.robot, self.camera_link_index)
         camera_pos = link_state[0]
         camera_orn = link_state[1]
@@ -53,18 +67,20 @@ class Camera_Sensor(Sensor):
 
 
         # Set the PyBullet visualizer camera to the exact position and orientation of the "camera" link
-        view_matrix = p.computeViewMatrix(camera_pos, camera_target, [0, 0, 1])
-        proj_matrix = p.computeProjectionMatrixFOV(fov=self.fov, 
+        self.view_matrix = p.computeViewMatrix(camera_pos, camera_target, [0, 0, 1])
+        self.proj_matrix = p.computeProjectionMatrixFOV(fov=self.fov, 
                                                     aspect=float(self.resolution) /self.resolution, 
                                                     nearVal=self.camera_near, 
                                                     farVal=self.camera_far)
         
+        
         images = []
+        
 
         # Capture the image from this viewpoint
         width, height, rgb_img, depth_img, semantic_img = p.getCameraImage(self.resolution, self.resolution, 
-                                                                viewMatrix=view_matrix,
-                                                                projectionMatrix=proj_matrix,
+                                                                viewMatrix=self.view_matrix,
+                                                                projectionMatrix=self.proj_matrix,
                                                                 renderer=p.ER_BULLET_HARDWARE_OPENGL)
         self.current_rgb_image = rgb_img
         self.current_depth_image = depth_img
@@ -79,6 +95,18 @@ class Camera_Sensor(Sensor):
         # Prepare depth image
         if self.depth or self.hha:
             depth = self.camera_far * self.camera_near / (self.camera_far - (self.camera_far - self.camera_near) * depth_img)
+            # # if self.do_vis:
+            # point_cloud = self._get_point_cloud(depth_img)
+            # # vis = input("visualise point cloud? ")
+            # # if vis == "y":
+            # #     self.visualise_point(point_cloud[0:100])
+            # pcd = o3d.geometry.PointCloud()
+            # pcd.points = o3d.utility.Vector3dVector(point_cloud)
+
+            # self.vis.update_geometry(pcd)
+            # self.vis.poll_events()
+            # self.vis.update_renderer()
+            # o3d.visualization.draw_geometries([pcd])
             if self.hha:
                 hha = getHHA(self.intrinsic_matrix, depth, depth)
                 hha = hha.transpose(2, 0, 1)
@@ -99,23 +127,11 @@ class Camera_Sensor(Sensor):
                 # depth_img = np.stack((depth_image_normalized, depth_image_normalized, depth_image_normalized), axis=-1)
                 images.append(depth_image_normalized)
             # depth_img = np.expand_dims(depth_image_normalized, axis=2)  # Make depth a single-channel 3D image
-        # debug stuff
-                                                                                       
+        # debug stuff                                                                  
         # cv2.imwrite("test.png", np.squeeze(depth_img))
         # Optionally, add semantic image layer
         if self.semantic:
             semantic_img = np.expand_dims(semantic_img, axis=0)  # Make semantic a single-channel 3D image
-
-        # # Concatenate depth and/or semantic images
-        # if self.depth and self.semantic:
-        #     observation = np.concatenate((rgb_img, depth_img, semantic_img), axis=2)
-        # elif self.depth:
-        #     # observation = np.concatenate((rgb_img, depth_img), axis=2)
-        #     observation = depth_img
-        # elif self.semantic:
-        #     observation = np.concatenate((rgb_img, semantic_img), axis=2)
-        # else:
-        #     observation = rgb_img
             
         stacked_observation = np.vstack(images)
         return stacked_observation
@@ -144,10 +160,27 @@ class Camera_Sensor(Sensor):
         c_y = self.resolution / 2
 
         intrinsic_matrix = np.array([[f_x, 0, c_x],
-                            [0, f_y, c_y],
-                            [0, 0, 1]])   
+                                     [0, f_y, c_y],
+                                     [0,  0,   1]])   
         return intrinsic_matrix
         # print("intrinsic_matrix: ", intrinsic_matrix)
+
+
+    def visualise_point(self, point_cloud):
+        for body in self.previous_bodies:
+            p.removeBody(body, physicsClientId=self.client)
+        self.previous_bodies = []
+        for point in point_cloud:
+            visual_shape_id = p.createVisualShape(p.GEOM_SPHERE, radius=0.05, rgbaColor=[1, 0, 0, 1])
+            self.previous_bodies.append(visual_shape_id)
+            p.createMultiBody(baseVisualShapeIndex=visual_shape_id, basePosition=point, physicsClientId=self.client)
+
+        
+    def _calculate_camera_matrices(self):
+        pass
     
     def get_render_images(self):
         return self.current_rgb_image, self.current_depth_image
+    
+    def get_current_depth_image(self):
+        return self.current_depth_image

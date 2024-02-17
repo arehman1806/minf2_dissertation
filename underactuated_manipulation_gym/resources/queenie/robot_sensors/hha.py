@@ -1,3 +1,6 @@
+# ADD COPYRIGHT INFORMATION HERE
+
+
 # --*-- coding:utf-8 --*--
 import numpy as np
 import cv2
@@ -356,8 +359,8 @@ def convert_depth(depth_image, camera_near, camera_far):
 
 '''
 C: Camera matrix
-D: Depth image, the unit of each element in it is "meter"
-RD: Raw depth image, the unit of each element in it is "meter"
+D: Depth image, in meters
+RD: Raw depth image, in meters
 '''
 def getHHA(C, D, RD):
     missingMask = (RD == 0);
@@ -369,9 +372,9 @@ def getHHA(C, D, RD):
     angle = np.reshape(angle, h.shape)
 
     '''
-    Must convert nan to 180 as the MATLAB program actually does. 
-    Or we will get a HHA image whose border region is different
-    with that of MATLAB program's output.
+    Must convert nan to 180, same as the MATLAB. 
+    Otherwise we will get an HHA image whose border region is different
+    than that of MATLAB program's output.
     '''
     angle[np.isnan(angle)] = 180        
 

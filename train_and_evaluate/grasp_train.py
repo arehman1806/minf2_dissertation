@@ -11,12 +11,12 @@ import time
 import numpy as np
 
 # IMPORTANT. edit this before every run:
-tb_log_name = "hha_single_object"
+tb_log_name = "hha_5_objects"
 # tb_log_name = "testing_videos"
 # Save a checkpoint every 1000 steps
 checkpoint_callback = CheckpointCallback(
   save_freq=40000,
-  save_path=f"./{tb_log_name}/",
+  save_path=f"./runs/grasp/{tb_log_name}/",
   name_prefix=tb_log_name,
   save_replay_buffer=False,
   save_vecnormalize=False,

@@ -53,13 +53,15 @@ class BaseOptionEnvironment(BaseEnvironment):
         self.step_i = 0
 
         self.previous_distance = None
+        self.proprioception_indices = None
     
     def reset(self, seed=None):
         # Reset the environment to its initial state
         self.step_i = 0
         if self._as_subpolicy:
             self.current_object = self.object_loader.get_current_object()
-            return self.get_observation()[0], {}
+            observation, self.proprioception_indices = self.get_observation()
+            return observation, {}
         pos = [0, 0, 0.4]
         orn = p.getQuaternionFromEuler([0, 0, 0])
         self.robot.reset(pos, orn)
@@ -67,8 +69,8 @@ class BaseOptionEnvironment(BaseEnvironment):
         self.target.reset_position(None)
         for _ in range(100):
             p.stepSimulation()
-        # Return the initial observation
-        return self.get_observation()[0], {}
+        observation, self.proprioception_indices = self.get_observation()
+        return observation, {}
     
     def _reward(self, observation, proprioception_indices, action):
         raise NotImplementedError

@@ -9,6 +9,7 @@ parent_directory = os.path.dirname(current_directory)
 sys.path.insert(0, parent_directory)
 from .robot_sensors.camera import Camera_Sensor
 from .robot_sensors.proprioception import Proprioception_Sensor
+from .robot_sensors.point_cloud import PointCloudSensor
 from .robot import QueenieRobot
 
 class QueenieRobotEnvInterface():
@@ -115,16 +116,23 @@ class QueenieRobotEnvInterface():
     separate keys for camera, joint states, and contact points
     """
     def get_state(self):
-            image_obs = self.sensors["camera"].get_observation()
-            proprioception, indices = self.sensors["proprioception"].get_observation()
-            proprioception = np.array(proprioception, dtype=np.float32)
+            observation = {}
+            for sensor_name, sensor in self.sensors.items():
+                if sensor_name == "proprioception":
+                    observation[sensor_name], indices = sensor.get_observation()
+                    observation[sensor_name + "_indices"] = indices
+                else:
+                    observation[sensor_name] = sensor.get_observation()
+            # image_obs = self.sensors["camera"].get_observation()
+            # proprioception, indices = self.sensors["proprioception"].get_observation()
+            # proprioception = np.array(proprioception, dtype=np.float32)
 
             # Construct observation dictionary
-            observation = {
-                "image_obs": image_obs,
-                "proprioception": proprioception,
-                "proprioception_indices": indices
-            }
+            # observation = {
+            #     "image_obs": image_obs,
+            #     "proprioception": proprioception,
+            #     "proprioception_indices": indices
+            # }
             return observation
 
 
@@ -135,6 +143,8 @@ class QueenieRobotEnvInterface():
                 self.sensors[sensor_name] = Camera_Sensor(self.client, self.robot, sensor_name, sensor_params, self._config["parameters"])
             elif sensor_name == "proprioception":
                 self.sensors[sensor_name] = Proprioception_Sensor(self.client, self.robot, sensor_name, sensor_params, self._config["parameters"])
+            elif sensor_name == "point_cloud":
+                self.sensors[sensor_name] = PointCloudSensor(self.client, self.robot, sensor_name, sensor_params, self._config["parameters"], self.sensors["camera"])
             else:
                 raise NotImplementedError(f"Sensor {sensor_name} not implemented")
         return

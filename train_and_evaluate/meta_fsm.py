@@ -30,7 +30,7 @@ model = FSMMetaPolicy(env, policy_kwargs)
 for trial in range(NUM_TRAILS):
     done = False
     while not done:
-        action = model.predict(obs)
+        action, _ = model.predict(obs)
         obs, reward, done, info = env.step(action)
         if done:
             print(f"Trial {trial} done.\ninfo: {info}")

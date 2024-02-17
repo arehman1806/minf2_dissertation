@@ -76,7 +76,9 @@ robot:
   sensors:
    
     camera:
+      fov: 80
       depth: False
+      hha: False
       rgb: False
       greyscale: True
       semantic: False

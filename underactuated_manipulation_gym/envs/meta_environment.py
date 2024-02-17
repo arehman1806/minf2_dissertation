@@ -1,5 +1,6 @@
 from underactuated_manipulation_gym.envs.base_option_environment import BaseEnvironment
 from underactuated_manipulation_gym.policy_executors.base_policy_executor import BasePolicyExecutor
+from underactuated_manipulation_gym.policy_executors.rule_based_policy_executor import RuleBasedPolicyExecutor
 from underactuated_manipulation_gym.resources.queenie.robot import QueenieRobot
 from underactuated_manipulation_gym.resources.queenie.robot_env_interface import QueenieRobotEnvInterface
 from underactuated_manipulation_gym.resources.plane import Plane
@@ -49,6 +50,7 @@ class MetaEnvironment(BaseEnvironment):
     
     def step(self, action):
         # action will be the index of the subpolicy to be used
+        action = action[0]
         policy_executor = self._policy_executors[action]
         obs, reward, done = policy_executor.execute_policy(steps=-1)
 
@@ -60,7 +62,7 @@ class MetaEnvironment(BaseEnvironment):
         
     def get_observation(self):
         self.robot_state = self.robot.get_state()
-        image_obs = self.robot_state["image_obs"]
+        image_obs = self.robot_state["camera"]
         vect_obs = self.robot_state["proprioception"]
         observation_indices = self.robot_state["proprioception_indices"]
         object_pose = self.current_object.get_base_pose()[0]
@@ -113,8 +115,13 @@ class MetaEnvironment(BaseEnvironment):
         # we have a name for each env and then we have the path to the model
         # we need a completely new set of objects. these objects will have the model and the environments
         controllers = {"robot": self.robot_object, "plane": self.plane, "object_loader": self.object_loader, "target": self.target, "client": self.client}
-        for name, policy_executor in self._config["policy_executors"].items():
-            self._policy_executors[policy_executor["index"]] = BasePolicyExecutor(policy_executor["env_config_file"], controllers)
+        for type_policy, policy_executors in self._config["policy_executors"].items():
+            if type_policy == "learning_based":
+                for name, policy_executor in policy_executors.items():
+                    self._policy_executors[policy_executor["index"]] = BasePolicyExecutor(policy_executor["env_config_file"], controllers)
+            elif type_policy == "rule_based":
+                for name, policy_executor in policy_executors.items():
+                    self._policy_executors[policy_executor["index"]] = RuleBasedPolicyExecutor(policy_executor["env_config_file"], controllers, policy_executor["policy_class"])
 
     
     def _get_action_space(self):

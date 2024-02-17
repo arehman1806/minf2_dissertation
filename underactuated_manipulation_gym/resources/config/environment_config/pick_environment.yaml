@@ -1,3 +1,5 @@
+# THIS CONFIGURATION IS TASK SPECIFIC. IT IS USED TO SPECIFY THE ENVIRONMENT, ROBOT, SENSORS AND ACTUATORS FOR THE PUSH TASK.
+
 ######### LINK INDEXES TO BE USED IN THIS FILE. THESE WILL REMAIN CONSTANT UNLESS WE CHANGE THE URDF #########
 
 # chassis: -1
@@ -31,15 +33,16 @@
 
 ######### ENVIRONMENT #########
 environment:
-  name: GraspEnvironment-v1
-  model_class: SAC
-  model_path: ./runs/grasp/hha_single_object/hha_single_object_160000_steps.zip
-  episode_length: 100
-  episode_length_test: 100
+  name: PickEnvironment-v0
+  model_class: PickPolicy
+  vec_normalize_path: null
+  episode_length: 50
+  episode_length_test: 50
   object_dataset: random_urdfs
   global_scale: 6.0
   specific_objects: [] # this has to be empty if num_objects is not -1
   num_objects: 5
+  target_radius: 1
   gui: True
 
 ######### ROBOT #########
@@ -50,9 +53,10 @@ robot:
     min_linear_velocity: -2
     max_angular_velocity: 2
     min_angular_velocity: -2
+    speed: 0.1
     joint_params:
       1: 
-        min: 0
+        min: -0.7
         max: 0.21
         init: 0
       2: 
@@ -74,9 +78,9 @@ robot:
     camera:
       fov: 80
       depth: False
-      hha: True
+      hha: False
       rgb: False
-      greyscale: False
+      greyscale: True
       semantic: False
       camera_near: 0.005
       camera_far: 3.0
@@ -89,8 +93,8 @@ robot:
       - 1
       - 2
       # gripper joints
-      - 4
-      - 5
+      # - 4
+      # - 5
       joint_position: True
       joint_velocity: False
       jrf: False
@@ -101,8 +105,12 @@ robot:
         - 4
         - 5
       contact_force: False
-      normal_angle: True
+      normal_angle: False
       normal_angle_palm: False
+    
+    point_cloud:
+      downsample_factor: 4
+      # more preprocessing options
 
   ######### ACTUATORS #########
 

@@ -18,6 +18,7 @@ class BaseEnvironment(gym.Env):
         self._config = self._parse_config(config_file)
         self._robot_config = self._config["robot"]
         self._environment_config = self._config["environment"]
+        self.proprioception_indices = None
     
 
     def reset(self, seed=None):
@@ -31,7 +32,8 @@ class BaseEnvironment(gym.Env):
         for _ in range(100):
             p.stepSimulation()
         # Return the initial observation
-        return self.get_observation()[0], {}
+        observation, self.proprioception_indices = self.get_observation()
+        return observation, {}
 
     def step(self, action):
 
@@ -78,6 +80,9 @@ class BaseEnvironment(gym.Env):
                     (object_link_state[1] - target_link_state[1]) ** 2 )** 0.5
         
         return distance
+    
+    def _has_grasped_object(self):
+        raise NotImplementedError
 
     def get_observation(self):
         raise NotImplementedError

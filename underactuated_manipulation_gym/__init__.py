@@ -29,3 +29,14 @@ register(
      id="queenie_gym_envs/MetaEnvironment-v0",
      entry_point="underactuated_manipulation_gym.envs:MetaEnvironment",
 )
+
+register(
+     id="queenie_gym_envs/RuleBasedEnvironment-v0",
+     entry_point="underactuated_manipulation_gym.envs:RuleBasedEnvironment",
+
+)
+
+register(
+     id="queenie_gym_envs/PickEnvironment-v0",
+     entry_point="underactuated_manipulation_gym.envs:PickEnvironment",
+)
