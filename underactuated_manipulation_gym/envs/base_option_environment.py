@@ -16,6 +16,7 @@ from underactuated_manipulation_gym.envs.base_environment import BaseEnvironment
 
 class BaseOptionEnvironment(BaseEnvironment):
     def __init__(self, config_file, controllers=None, as_subpolicy=False):
+        self.step_i = 0
         if config_file is None:
             raise Exception("No config file provided")
         super(BaseOptionEnvironment, self).__init__(config_file)
@@ -28,20 +29,20 @@ class BaseOptionEnvironment(BaseEnvironment):
             p.setRealTimeSimulation(0)
             # p.setTimeStep(1./500
 
-            robot_object = QueenieRobot(self.client, self._robot_config)
-            self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, robot_object)
             self.plane = Plane(self.client)
             self.object_loader = ObjectLoader(self.client, "random_urdfs", 
                                             num_objects=self._environment_config["num_objects"], 
                                             specific_objects=self._environment_config["specific_objects"],
                                             global_scale=self._environment_config["global_scale"])
             self.current_object = self.object_loader.change_object()
+            robot_object = QueenieRobot(self.client, self._robot_config)
+            self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, robot_object, self.object_loader)
             self.target = Target(self.client, ([5,5,0.0], [0,0,0,1]))
         else:
             self.client = controllers["client"]
-            self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, controllers["robot"])
             self.plane = controllers["plane"]
             self.object_loader = controllers["object_loader"]
+            self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, controllers["robot"], self.object_loader)
             self.target = controllers["target"]
             self.current_object = self.object_loader.get_current_object()
 
@@ -50,13 +51,13 @@ class BaseOptionEnvironment(BaseEnvironment):
         self.observation_space = self._get_observation_space()
         self.action_space = self._get_action_space()
 
-        self.step_i = 0
 
         self.previous_distance = None
         self.proprioception_indices = None
     
     def reset(self, seed=None):
         # Reset the environment to its initial state
+        self.reset_env_memory()
         self.step_i = 0
         if self._as_subpolicy:
             self.current_object = self.object_loader.get_current_object()
@@ -71,6 +72,9 @@ class BaseOptionEnvironment(BaseEnvironment):
             p.stepSimulation()
         observation, self.proprioception_indices = self.get_observation()
         return observation, {}
+    
+    def reset_env_memory(self):
+        pass
     
     def _reward(self, observation, proprioception_indices, action):
         raise NotImplementedError
@@ -101,4 +105,5 @@ class BaseOptionEnvironment(BaseEnvironment):
 
     def _get_observation_space(self):
         raise NotImplementedError
+    
     

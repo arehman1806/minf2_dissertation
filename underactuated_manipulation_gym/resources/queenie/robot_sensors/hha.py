@@ -5,6 +5,7 @@
 import numpy as np
 import cv2
 from scipy import signal
+import math
 
 '''
 helper function
@@ -178,11 +179,6 @@ def rotatePC(pc, R):
         return res
     
 
-
-# --*-- coding:utf-8 --*--
-import numpy as np
-# np.seterr(divide='ignore', invalid='ignore')
-
 '''
 z: depth image in 'centimetres'
 missingMask: a mask
@@ -329,34 +325,6 @@ def computeNormalsSquareSupport(depthImage, missingMask, R, sc, cameraMatrix, su
     b = np.multiply(b, sn)
     return N, b
 
-# --*-- coding:utf-8 --*--
-import math
-import cv2
-import os
-import math
-
-'''
-must use 'COLOR_BGR2GRAY' here, or you will get a different gray-value with what MATLAB gets.
-'''
-def getImage(root='demo'):
-    D = cv2.imread(os.path.join(root, 'dpeth.png'), cv2.COLOR_BGR2GRAY)/1
-    D = convert_depth(D, 0.005, 3.0)
-    # RD = cv2.imread(os.path.join(root, '0_raw.png'), cv2.COLOR_BGR2GRAY)/10000
-    return D, D
-
-
-def convert_depth(depth_image, camera_near, camera_far):
-    # Normalize the depth image
-    normalized_depth = depth_image.astype(np.float32) / 65535.0
-
-    # Convert to actual depth (assuming linear mapping)
-    # actual_depth = normalized_depth * (camera_far - camera_near) + camera_near
-
-    # Uncomment the following line if depth is non-linearly mapped
-    actual_depth = camera_near * camera_far / (camera_far - normalized_depth * (camera_far - camera_near))
-
-    return actual_depth
-
 '''
 C: Camera matrix
 D: Depth image, in meters
@@ -399,37 +367,3 @@ def getHHA(C, D, RD):
     I[I>255] = 255
     HHA = I.astype(np.uint8)
     return HHA
-
-if __name__ == "__main__":
-    D, RD = getImage()
-    camera_matrix = getCameraParam('color')
-    print('max gray value: ', np.max(D))        # make sure that the image is in 'meter'
-    hha = getHHA(camera_matrix, D, RD)
-    hha_complete = getHHA(camera_matrix, D, D)
-    cv2.imwrite('demo/hha.png', hha)
-    cv2.imwrite('demo/hha_complete.png', hha_complete)
-
-    img = hha.transpose(2, 0, 1)
-    cv2.imwrite("channel1.png", img[0])
-    cv2.imwrite("channel2.png", img[1])
-    cv2.imwrite("channel3.png", img[2])
-    print(hha_complete.dtype)
-    
-    
-    ''' multi-peocessing example '''
-    '''
-    from multiprocessing import Pool
-    
-    def generate_hha(i):
-        # generate hha for the i-th image
-        return
-    
-    processNum = 16
-    pool = Pool(processNum)
-
-    for i in range(img_num):
-        print(i)
-        pool.apply_async(generate_hha, args=(i,))
-        pool.close()
-        pool.join()
-    ''' 

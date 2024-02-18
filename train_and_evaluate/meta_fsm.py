@@ -33,4 +33,4 @@ for trial in range(NUM_TRAILS):
         action, _ = model.predict(obs)
         obs, reward, done, info = env.step(action)
         if done:
-            print(f"Trial {trial} done.\ninfo: {info}")
+            print(f"Trial {trial} done.")

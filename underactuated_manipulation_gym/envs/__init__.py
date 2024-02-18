@@ -3,4 +3,4 @@ from underactuated_manipulation_gym.envs.simple_driving_environment import Diffe
 from underactuated_manipulation_gym.envs.grasp_environment import GraspEnvironment, GraspEnvironment1
 from underactuated_manipulation_gym.envs.push_environment import PushEnvironment
 from underactuated_manipulation_gym.envs.meta_environment import MetaEnvironment
-from underactuated_manipulation_gym.envs.rule_based_environments import RuleBasedEnvironment, PickEnvironment
+from underactuated_manipulation_gym.envs.rule_based_environments import RuleBasedEnvironment, PickEnvironment, DragEnvironment, ReorientEnvironment, PushDeltaEnvironment

@@ -13,3 +13,6 @@ checkpoint
 
 # Saved models
 *.zip
+
+# saved buffers
+*.pkl

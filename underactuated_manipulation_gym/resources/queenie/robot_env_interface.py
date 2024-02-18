@@ -14,7 +14,7 @@ from .robot import QueenieRobot
 
 class QueenieRobotEnvInterface():
 
-    def __init__(self, client, config, robot_object=None) -> None:
+    def __init__(self, client, config, robot_object=None, object_handler=None) -> None:
         self.client = client
         self._config = config
         
@@ -26,6 +26,8 @@ class QueenieRobotEnvInterface():
         self.palm_link_index = self._get_link_index("palm")
         self.left_finger_link_index = self._get_link_index("left_finger")
         self.right_finger_link_index = self._get_link_index("right_finger")
+
+        self.object_handler = object_handler
 
         self._setup_sensors()
     """
@@ -83,7 +85,7 @@ class QueenieRobotEnvInterface():
         if self._config["actuators"]["gripper"] or use_gripper:
             position = self._config["parameters"]["gripper"]["max"] if action[-1] > 0 else self._config["parameters"]["gripper"]["min"]
             for joint in self._config["parameters"]["gripper"]["joints"]:
-                p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=position, force=20)
+                p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=position, force=200)
             # p.setJointMotorControl2(self.robot, 4, p.POSITION_CONTROL, targetPosition=position)
             # p.setJointMotorControl2(self.robot, 5, p.POSITION_CONTROL, targetPosition=position)
 
@@ -144,7 +146,7 @@ class QueenieRobotEnvInterface():
             elif sensor_name == "proprioception":
                 self.sensors[sensor_name] = Proprioception_Sensor(self.client, self.robot, sensor_name, sensor_params, self._config["parameters"])
             elif sensor_name == "point_cloud":
-                self.sensors[sensor_name] = PointCloudSensor(self.client, self.robot, sensor_name, sensor_params, self._config["parameters"], self.sensors["camera"])
+                self.sensors[sensor_name] = PointCloudSensor(self.client, self.robot, sensor_name, sensor_params, self._config["parameters"], self.sensors["camera"], object_handler=self.object_handler)
             else:
                 raise NotImplementedError(f"Sensor {sensor_name} not implemented")
         return

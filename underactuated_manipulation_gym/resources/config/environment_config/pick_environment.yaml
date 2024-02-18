@@ -45,6 +45,11 @@ environment:
   target_radius: 1
   gui: True
 
+######### POLICY PARAMETERS #########
+
+policy_parameters:
+  speed: 0.1
+
 ######### ROBOT #########
 robot:
 ######### ROBOT PARAMETERS #########
@@ -53,7 +58,6 @@ robot:
     min_linear_velocity: -2
     max_angular_velocity: 2
     min_angular_velocity: -2
-    speed: 0.1
     joint_params:
       1: 
         min: -0.7
@@ -108,8 +112,8 @@ robot:
       normal_angle: False
       normal_angle_palm: False
     
-    point_cloud:
-      downsample_factor: 4
+    # point_cloud:
+    #   downsample_factor: 4
       # more preprocessing options
 
   ######### ACTUATORS #########

@@ -54,7 +54,7 @@ class PushEnvironment(BaseOptionEnvironment):
         # reward contact to encourage exploration
         contacts = observation["vect_obs"][proprioception_indices["contact"]: proprioception_indices["contact"] + 3]
         is_contact = sum(contacts) > 0
-        reward += 0.1 * is_contact
+        reward += 0.01 * is_contact
         
         # done 
         done = distance < self._environment_config["target_radius"] or self.step_i >= self._episode_length
@@ -142,15 +142,3 @@ class PushEnvironment(BaseOptionEnvironment):
         image_obs = spaces.Box(low=0, high=255, shape=image_obs_size, dtype=np.uint8)
         vect_obs = spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
         return spaces.Dict({"image_obs": image_obs, "vect_obs": vect_obs})
-    
-    # def _get_observation_space(self):
-    #     # Define the observation space
-    #     obs_space_size = self.robot.get_observation_space_size()
-    #     vect_obs_size = obs_space_size["vector"]
-    #     image_obs_size = obs_space_size["image"]
-    #     min_obs = np.full(vect_obs_size[0], -np.inf)
-    #     max_obs = np.full(vect_obs_size[0], np.inf)
-    #     image_obs = spaces.Box(low=0, high=255, shape=image_obs_size, dtype=np.uint8)
-    #     vect_obs = spaces.Box(low=min_obs, high=max_obs, dtype=np.float32)
-    #     return spaces.Dict({"image_obs": image_obs, "vect_obs": vect_obs})
-        # return spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)

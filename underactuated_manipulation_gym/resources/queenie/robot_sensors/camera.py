@@ -11,10 +11,12 @@ from .hha import getHHA
 
 class Camera_Sensor(Sensor):
 
-    def __init__(self, client, robot, sensor_name, sensor_params, robot_params):
+    def __init__(self, client, robot, sensor_name, sensor_params, robot_params, object_handler=None):
         super().__init__(robot, sensor_name, sensor_params, robot_params)
         self.client = client
         self.dim_obs_space = self._setup_camera()
+
+        self.object_handler = object_handler
 
     def _setup_camera(self):
         self.camera_link_index = get_link_index(self.robot, "camera")
@@ -39,8 +41,10 @@ class Camera_Sensor(Sensor):
         #     self.vis.add_geometry(pcd)
         #     self.do_vis = True
         
-        self.current_rgb_image = np.zeros((self.resolution, self.resolution, 3))
-        self.current_depth_image = np.zeros((self.resolution, self.resolution, 1))
+        self.current_rgb_image = None
+        self.current_depth_image = None
+        self.current_semantic_image = None
+
         self.intrinsic_matrix = self._calculate_intrinsic_matrix()
         dry_run = self.get_observation()
         return dry_run.shape
@@ -84,6 +88,8 @@ class Camera_Sensor(Sensor):
                                                                 renderer=p.ER_BULLET_HARDWARE_OPENGL)
         self.current_rgb_image = rgb_img
         self.current_depth_image = depth_img
+        self.current_semantic_image = semantic_img
+
         if self.rgb or self.greyscale:
             rgb_img = rgb_img[:, :, :3]  # This is a 3D array
             # Convert to greyscale if required

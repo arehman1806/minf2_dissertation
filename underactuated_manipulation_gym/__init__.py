@@ -40,3 +40,18 @@ register(
      id="queenie_gym_envs/PickEnvironment-v0",
      entry_point="underactuated_manipulation_gym.envs:PickEnvironment",
 )
+
+register(
+     id="queenie_gym_envs/DragEnvironment-v0",
+     entry_point="underactuated_manipulation_gym.envs:DragEnvironment",
+)
+
+register(
+     id="queenie_gym_envs/ReorientEnvironment-v0",
+     entry_point="underactuated_manipulation_gym.envs:ReorientEnvironment",
+)
+
+register(
+     id="queenie_gym_envs/PushDeltaEnvironment-v0",
+     entry_point="underactuated_manipulation_gym.envs:PushDeltaEnvironment",
+)

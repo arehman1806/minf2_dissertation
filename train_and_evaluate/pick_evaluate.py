@@ -15,7 +15,6 @@ exp_name = "single_object_push_256x3_networks"
 
 env = gym.make("queenie_gym_envs/PickEnvironment-v0", config_file="./underactuated_manipulation_gym/resources/config/environment_config/pick_environment.yaml")
 env = DummyVecEnv([lambda: env])
-env = VecNormalize(env, norm_obs=False, norm_reward=False, norm_obs_keys=["vect_obs"])
 # robot = env.get_robot()
 obs = env.reset()
 model = PickPolicy(env)

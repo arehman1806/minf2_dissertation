@@ -34,15 +34,15 @@
 ######### ENVIRONMENT #########
 environment:
   name: PushEnvironment-v0
-  model_class: PPO
+  model_class: SAC #previous best one was ppo
   model_path: ./runs/push/no_normalize_single_object_push_256x3_networks/no_normalize_single_object_push_256x3_networks_850000_steps
   vec_normalize_path: null
   episode_length: 500
   episode_length_test: 200
   object_dataset: random_urdfs
-  global_scale: 8.0
-  specific_objects: [] # this has to be empty if num_objects is not -1
-  num_objects: 5
+  global_scale: 6.0
+  specific_objects: [1] # this has to be empty if num_objects is not -1
+  num_objects: -1
   target_radius: 1
   gui: false
 

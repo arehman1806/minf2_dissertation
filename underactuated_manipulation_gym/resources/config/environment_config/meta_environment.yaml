@@ -30,6 +30,12 @@
 # right_wheel_back_hinge: 11
 
 
+######### POLICY PARAMETERS #########
+
+policy_parameters:
+  speed: 0.1
+
+  
 ######### POLICY EXECUTORS #########
 policy_executors:
   
@@ -50,16 +56,17 @@ policy_executors:
       env_name: PickEnvironment-v0
       env_config_file: underactuated_manipulation_gym/resources/config/environment_config/pick_environment.yaml
       policy_class: PickPolicy
+    drag:
+      index: 3
+      env_name: DragEnvironment-v0
+      env_config_file: underactuated_manipulation_gym/resources/config/environment_config/drag_environment.yaml
+      policy_class: DragPolicy
     # reorint:
-    #   index: 3
+    #   index: 4
     #   env_name: RuleBasedEnvironment-v0
     #   env_config_file: underactuated_manipulation_gym/resources/config/environment_config/reorient_environment.yaml
     #   policy_class: ReorientPolicy
-    # drag:
-    #   index: 4
-    #   env_name: RuleBasedEnvironment-v0
-    #   env_config_file: underactuated_manipulation_gym/resources/config/environment_config/drag_environment.yaml
-    #   policy_class: DragPolicy
+    
 
 policy_executor_mapping:
   grasp: 0

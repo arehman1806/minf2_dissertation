@@ -9,7 +9,9 @@ class RuleBasedPolicy():
     def __init__(self, env):
         self._env = env
         self._rules = []
-        self.proprioception_indices = self._env.envs[0].proprioception_indices
+        self.policy_params = self._env.envs[0].policy_params
+        self.proprioception_indices = self._env.envs[0].unwrapped.proprioception_indices
+        self.joint_param = self._env.envs[0].joint_params
 
     def predict(self, observation: np.ndarray) -> np.ndarray:
         """Predict an action given an observation."""

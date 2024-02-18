@@ -16,6 +16,7 @@ class ObjectLoader:
         self.rng = np.random.default_rng(seed=12345)
         config = self._load_config()
         self.spawn_config = config["spawn_config"]
+        self.dynamics = config["dynamics"]
         object_class = config["object_class"]
         self.global_scale = global_scale
         if object_class == "random_urdfs":

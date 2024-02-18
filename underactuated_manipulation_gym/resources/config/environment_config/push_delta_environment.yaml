@@ -1,3 +1,5 @@
+# THIS CONFIGURATION IS TASK SPECIFIC. IT IS USED TO SPECIFY THE ENVIRONMENT, ROBOT, SENSORS AND ACTUATORS FOR THE PUSH TASK.
+
 ######### LINK INDEXES TO BE USED IN THIS FILE. THESE WILL REMAIN CONSTANT UNLESS WE CHANGE THE URDF #########
 
 # chassis: -1
@@ -31,16 +33,29 @@
 
 ######### ENVIRONMENT #########
 environment:
-  name: GraspEnvironment-v1
-  model_class: SAC
-  model_path: ./runs/grasp/hha_single_object/hha_single_object_160000_steps.zip
-  episode_length: 100
-  episode_length_test: 100
+  name: PushDeltaEnvironment-v0
+  model_class: PushDeltaPolicy
+  vec_normalize_path: null
+  episode_length: 300
+  episode_length_test: 50
   object_dataset: random_urdfs
   global_scale: 6.0
-  specific_objects: [7] # this has to be empty if num_objects is not -1
-  num_objects: -1
+  specific_objects: [] # this has to be empty if num_objects is not -1
+  num_objects: 5
+  target_radius: 1
   gui: True
+
+######### POLICY PARAMETERS #########
+
+policy_parameters:
+  push_distance: 1
+  impact_point_distance: 1.1
+  drive_until_distance: 1
+  base_speed: 1
+  kp_linear: 0.6
+  kp_angular: 1.0
+  distance_threshold: 0.3
+  
 
 ######### ROBOT #########
 robot:
@@ -52,7 +67,7 @@ robot:
     min_angular_velocity: -2
     joint_params:
       1: 
-        min: 0
+        min: -0.7
         max: 0.21
         init: 0
       2: 
@@ -74,9 +89,9 @@ robot:
     camera:
       fov: 80
       depth: False
-      hha: True
+      hha: False
       rgb: False
-      greyscale: False
+      greyscale: True
       semantic: False
       camera_near: 0.005
       camera_far: 3.0
@@ -89,8 +104,8 @@ robot:
       - 1
       - 2
       # gripper joints
-      - 4
-      - 5
+      # - 4
+      # - 5
       joint_position: True
       joint_velocity: False
       jrf: False
@@ -101,16 +116,20 @@ robot:
         - 4
         - 5
       contact_force: False
-      normal_angle: True
+      normal_angle: False
       normal_angle_palm: False
+    
+    point_cloud:
+      downsample_factor: 4
+      # more preprocessing options
 
   ######### ACTUATORS #########
 
   actuators:
     # joints
-    joints:
-      - 1
-      - 2
+    joints: []
+      # - 1
+      # - 2
     gripper: True
     wheel_joints:
       - 8

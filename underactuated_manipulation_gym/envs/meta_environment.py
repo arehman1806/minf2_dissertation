@@ -24,8 +24,6 @@ class MetaEnvironment(BaseEnvironment):
         p.setRealTimeSimulation(0)
         # p.setTimeStep(1./500
 
-        self.robot_object = QueenieRobot(self.client, self._robot_config)
-        self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, self.robot_object)
         self.target = Target(self.client, ([5,5,0.0], [0,0,0,1]))
         self.plane = Plane(self.client)
         self.object_loader = ObjectLoader(self.client, self._environment_config["object_dataset"], 
@@ -33,6 +31,8 @@ class MetaEnvironment(BaseEnvironment):
                                         specific_objects=self._environment_config["specific_objects"],
                                         global_scale=self._environment_config["global_scale"])
         self.current_object = self.object_loader.change_object()
+        self.robot_object = QueenieRobot(self.client, self._robot_config)
+        self.robot = QueenieRobotEnvInterface(self.client, self._robot_config, self.robot_object, self.object_loader)
         
         self._policy_executors = dict()
         self._load_policy_executors()
@@ -44,18 +44,35 @@ class MetaEnvironment(BaseEnvironment):
         self.step_i = 0
         self.previous_distance = None
         self.robot_state = None
+        self.policy_params = self._config["policy_parameters"]
+        self.joint_params = self._robot_config["parameters"]["joint_params"]
 
 
+
+    def _reward(self, observation, proprioception_indices, action):
+
+        #reward is based on how far the object is from its target
+        reward = 0
+        distance = self._calculate_object_target_distance()
+        if self.previous_distance is None:
+            self.previous_distance = distance
+        reward += 10 * (self.previous_distance - distance)
+        self.previous_distance = distance
+        
+        # done 
+        done = distance < self._environment_config["target_radius"] or self.step_i >= self._episode_length
+
+        return reward, done
 
     
     def step(self, action):
         # action will be the index of the subpolicy to be used
         action = action[0]
         policy_executor = self._policy_executors[action]
-        obs, reward, done = policy_executor.execute_policy(steps=-1)
+        observation, proprioception_indices = self.get_observation()
+        obs_policy, reward_policy, done_policy = policy_executor.execute_policy(steps=-1)
 
-        object_reahed_target = False
-
+        reward, object_reahed_target = self._reward(observation, proprioception_indices, action)
         done = object_reahed_target or self.step_i >= self._episode_length
 
         return self.get_observation()[0], reward, done, False, {}
