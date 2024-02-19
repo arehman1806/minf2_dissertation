@@ -1,15 +1,15 @@
-spawn_config:
-  max_x: 5
-  min_x: 3
-  max_y: 4
-  min_y: -4
-  min_z: 0
-  max_z: 0
-
 # spawn_config:
 #   max_x: 5
-#   min_x: -7
+#   min_x: 3
 #   max_y: 4
 #   min_y: -4
 #   min_z: 0
 #   max_z: 0
+
+spawn_config:
+  max_x: 4
+  min_x: 3
+  max_y: -3
+  min_y: -3
+  min_z: 0
+  max_z: 0

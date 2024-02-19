@@ -29,17 +29,67 @@
 # left_wheel_back_hinge: 10
 # right_wheel_back_hinge: 11
 
+
+######### POLICY PARAMETERS #########
+
+policy_parameters:
+  speed: 0.1
+
+  
+######### POLICY EXECUTORS #########
+policy_executors:
+  
+  ### Learning based ###
+  learning_based:
+    grasp:
+      index: 0
+      env_config_file: ../underactuated_manipulation_gym/resources/config/environment_config/grasp_environment_1.yaml
+    # push:
+    #   index: 1
+    #   env_name: PushEnvironment-v0
+    #   env_config_file: ../underactuated_manipulation_gym/resources/config/environment_config/push_environment.yaml
+  
+  ### Rule based ###
+  rule_based:
+    pick:
+      index: 2
+      env_name: PickEnvironment-v0
+      env_config_file: ../underactuated_manipulation_gym/resources/config/environment_config/pick_environment.yaml
+      policy_class: PickPolicy
+    drag:
+      index: 3
+      env_name: DragEnvironment-v0
+      env_config_file: ../underactuated_manipulation_gym/resources/config/environment_config/drag_environment.yaml
+      policy_class: DragPolicy
+    reorint:
+      index: 4
+      env_name: ../ReorientEnvironment-v0
+      env_config_file: ../underactuated_manipulation_gym/resources/config/environment_config/reorient_environment.yaml
+      policy_class: ReorientPolicy
+    # push_delta:
+      # index: 5
+      # env_name: ../PushDeltaEnvironment-v0
+      # env_config_file: underactuated_manipulation_gym/resources/config/environment_config/push_delta_environment.yaml
+      # policy_class: PushDeltaPolicy
+    
+
+policy_executor_mapping:
+  grasp: 0
+  push: 1
+  pick: 2
+  reorient: 3
+  drag: 4
+  push_delta: 5
+
 ######### ENVIRONMENT #########
 environment:
-  name: GraspEnvironment-v1
-  model_class: SAC
-  model_path: ./runs/grasp/hha_single_object/hha_single_object_160000_steps.zip
-  episode_length: 100
-  episode_length_test: 100
+  episode_length: 5
+  episode_length_test: 5
   object_dataset: random_urdfs
   global_scale: 6.0
-  specific_objects: [1,3,6,7,8] # this has to be empty if num_objects is not -1
+  specific_objects: [1] # this has to be empty if num_objects is not -1
   num_objects: -1
+  target_radius: 1
   gui: True
 
 ######### ROBOT #########
@@ -63,7 +113,7 @@ robot:
       min: 0
       max: 0.1
       init: 0.1
-      force: 20
+      force: 100
       joints:
         - 4
         - 5
@@ -74,10 +124,10 @@ robot:
    
     camera:
       fov: 80
-      depth: False
-      hha: True
+      depth: True
       rgb: False
-      greyscale: False
+      hha: False
+      greyscale: True
       semantic: False
       camera_near: 0.005
       camera_far: 3.0
@@ -87,8 +137,8 @@ robot:
       # base velocity
       lin_ang_velocity: True
       joints:
-      - 1
-      - 2
+      # - 1
+      # - 2
       # gripper joints
       - 4
       - 5
@@ -104,6 +154,10 @@ robot:
       contact_force: False
       normal_angle: True
       normal_angle_palm: False
+    
+    point_cloud:
+      downsample_factor: 4
+      # more preprocessing options
 
   ######### ACTUATORS #########
 

@@ -31,6 +31,11 @@ register(
 )
 
 register(
+     id="queenie_gym_envs/MetaEnvironment-v1",
+     entry_point="underactuated_manipulation_gym.envs:MetaEnvironmentv1",
+)
+
+register(
      id="queenie_gym_envs/RuleBasedEnvironment-v0",
      entry_point="underactuated_manipulation_gym.envs:RuleBasedEnvironment",
 

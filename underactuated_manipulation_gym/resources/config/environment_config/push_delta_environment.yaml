@@ -36,7 +36,7 @@ environment:
   name: PushDeltaEnvironment-v0
   model_class: PushDeltaPolicy
   vec_normalize_path: null
-  episode_length: 300000000
+  episode_length: 300
   episode_length_test: 50
   object_dataset: random_urdfs
   global_scale: 6.0

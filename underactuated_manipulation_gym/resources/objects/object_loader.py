@@ -16,7 +16,10 @@ class ObjectLoader:
         self.rng = np.random.default_rng(seed=12345)
         config = self._load_config()
         self.spawn_config = config["spawn_config"]
-        self.dynamics = config["dynamics"]
+        if "dynamics" in config.keys():
+            self.dynamics = config["dynamics"]
+        else:
+            self.dynamics = None
         object_class = config["object_class"]
         self.global_scale = global_scale
         if object_class == "random_urdfs":
@@ -37,7 +40,8 @@ class ObjectLoader:
         if self.current_object is not None:
             self._remove_object()
         self.current_object = self._spawn_object(pose)
-        p.changeDynamics(self.current_object.get_ids()[1], -1, spinningFriction=self.dynamics["spinning_friction"])
+        if self.dynamics is not None:
+            p.changeDynamics(self.current_object.get_ids()[1], -1, spinningFriction=self.dynamics["spinning_friction"])
         return self.current_object
 
     def empty_scene(self):

@@ -98,11 +98,11 @@ class PushDeltaPolicy(RuleBasedPolicy):
 
         # Update stage to 1 when close to the target and orientation is nearly aligned
         if target_distance < self.distance_threshold and abs(heading_error) < self.distance_threshold:
-            print(f"stage {self.stage} -> {self.stage + 1}")
+            # print(f"stage {self.stage} -> {self.stage + 1}")
             self.stage += 1
             self.stop_position = False
 
-        print(f"heading_error: {heading_error}, target_distance: {target_distance}, stage: {self.stage}")
+        # print(f"heading_error: {heading_error}, target_distance: {target_distance}, stage: {self.stage}")
         action[:, 0] = linear_velocity
         action[:, 1] = angular_velocity
         return action, None
