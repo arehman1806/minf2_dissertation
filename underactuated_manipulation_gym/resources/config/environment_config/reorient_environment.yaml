@@ -36,7 +36,7 @@ environment:
   name: ReorientEnvironment-v0
   model_class: ReorientPolicy
   vec_normalize_path: null
-  episode_length: 100
+  episode_length: 200
   episode_length_test: 50
   object_dataset: random_urdfs
   global_scale: 6.0
@@ -50,7 +50,7 @@ environment:
 policy_parameters:
   desired_distance: 1.5
   kp_linear: 0.5
-  kp_angular: 0.2
+  kp_angular: 0.9
 
 ######### ROBOT #########
 robot:
@@ -73,6 +73,7 @@ robot:
       min: 0
       max: 0.1
       init: 0.1
+      force: 20
       joints:
         - 4
         - 5

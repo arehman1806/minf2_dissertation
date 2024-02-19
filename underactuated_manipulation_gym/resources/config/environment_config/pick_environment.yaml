@@ -71,6 +71,7 @@ robot:
       min: 0
       max: 0.1
       init: 0.1
+      force: 100
       joints:
         - 4
         - 5
@@ -109,7 +110,7 @@ robot:
         - 4
         - 5
       contact_force: False
-      normal_angle: False
+      normal_angle: True
       normal_angle_palm: False
     
     # point_cloud:

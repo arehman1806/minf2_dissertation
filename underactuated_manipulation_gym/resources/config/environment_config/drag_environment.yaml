@@ -49,7 +49,7 @@ environment:
 
 policy_parameters:
   base_speed: 0.5    # between 0 and 1
-  kp_angular: 0.5    # can be any arbitrary value but depends on base speed
+  kp_angular: 0.9    # can be any arbitrary value but depends on base speed
 
 ######### ROBOT #########
 robot:
@@ -72,6 +72,7 @@ robot:
       min: 0
       max: 0.1
       init: 0.1
+      force: 100
       joints:
         - 4
         - 5
@@ -110,7 +111,7 @@ robot:
         - 4
         - 5
       contact_force: False
-      normal_angle: False
+      normal_angle: True
       normal_angle_palm: False
     
     point_cloud:

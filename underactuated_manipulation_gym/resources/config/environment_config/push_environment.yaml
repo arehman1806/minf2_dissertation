@@ -34,7 +34,7 @@
 ######### ENVIRONMENT #########
 environment:
   name: PushEnvironment-v0
-  model_class: SAC #previous best one was ppo
+  model_class: PPO #previous best one was ppo
   model_path: ./runs/push/no_normalize_single_object_push_256x3_networks/no_normalize_single_object_push_256x3_networks_850000_steps
   vec_normalize_path: null
   episode_length: 500
@@ -67,6 +67,7 @@ robot:
       min: 0
       max: 0.1
       init: 0.1
+      force: 20
       joints:
         - 4
         - 5

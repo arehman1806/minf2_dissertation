@@ -73,6 +73,9 @@ class BaseOptionEnvironment(BaseEnvironment):
         observation, self.proprioception_indices = self.get_observation()
         return observation, {}
     
+    def has_reached_target(self):
+        return self._calculate_object_target_distance() < self._environment_config["target_radius"]
+    
     def reset_env_memory(self):
         pass
     

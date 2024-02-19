@@ -53,14 +53,20 @@ class BaseEnvironment(gym.Env):
         # Define your reward and done criteria
         reward, done = self._reward(observation, proprioception_indices, action)
         done = done or self.step_i >= self._episode_length
+        success = done and not self._is_a_failure_state(observation, proprioception_indices, action)
         if done:
             self.previous_distance = None
         self.step_i += 1
 
-        return observation, reward, done, False,{}
+        info = {"success": success}
+
+        return observation, reward, done, False,info
     
     def _reward(self, observation, proprioception_indices, action):
         raise NotImplementedError
+    
+    def _is_a_failure_state(self, observation, proprioception_indices, action):
+        return False
     
     def _calculate_robot_object_distance(self):
         object_id = self.current_object.get_ids()[1]

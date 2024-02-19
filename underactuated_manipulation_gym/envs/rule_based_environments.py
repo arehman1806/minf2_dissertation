@@ -43,8 +43,11 @@ class PickEnvironment(RuleBasedEnvironment):
     def _reward(self, observation, proprioception_indices, action):
         done = False
         joint_positions = observation["vect_obs"][proprioception_indices["joint_position"]: proprioception_indices["joint_position"] + 2]
-        targets = np.array([-1, 0])
+        targets = np.array([0, 0.5])
         distance = np.linalg.norm(joint_positions - targets)
+        if self._is_a_failure_state(observation, proprioception_indices, action):
+            done = True
+            return -1, done
         if distance < 0.1:
             done = True
             return 1, done
@@ -68,6 +71,10 @@ class PickEnvironment(RuleBasedEnvironment):
 
         return observation, proprioception_indices
     
+    def _is_a_failure_state(self, observation, proprioception_indices, action):
+        angle_bw_contact_norms = observation["vect_obs"][proprioception_indices["normal_angle"]]
+        return not abs(angle_bw_contact_norms) > 3 / 4
+    
 
 class DragEnvironment(RuleBasedEnvironment):
     def __init__(self, config_file, controllers=None, as_subpolicy=False):
@@ -76,7 +83,7 @@ class DragEnvironment(RuleBasedEnvironment):
     def _reward(self, observation, proprioception_indices, action):
         done = False
         r, theta = observation["vect_obs"][proprioception_indices["polar_robot_target"]: proprioception_indices["polar_robot_target"] + 2]
-        if r < 0.1:
+        if r < 0.1 or self._is_a_failure_state(observation, proprioception_indices, action):
             done = True
             return 1, done
         return 0, done
@@ -107,6 +114,10 @@ class DragEnvironment(RuleBasedEnvironment):
 
         return observation, observation_indices
     
+    def _is_a_failure_state(self, observation, proprioception_indices, action):
+        angle_bw_contact_norms = observation["vect_obs"][proprioception_indices["normal_angle"]]
+        return not abs(angle_bw_contact_norms) > 3 / 4
+    
 
 class ReorientEnvironment(RuleBasedEnvironment):
     def __init__(self, config_file, controllers=None, as_subpolicy=False):
@@ -114,7 +125,11 @@ class ReorientEnvironment(RuleBasedEnvironment):
     
     def _reward(self, observation, proprioception_indices, action):
         done = False
-        return 0, done
+        rewards = 0
+        if not np.any(action[0:2]):
+            done = True
+            rewards = 1
+        return rewards, done
     
     def get_observation(self):
         self.robot_state = self.robot.get_state()
@@ -158,13 +173,18 @@ class ReorientEnvironment(RuleBasedEnvironment):
 class PushDeltaEnvironment(RuleBasedEnvironment):
     def __init__(self, config_file, controllers=None, as_subpolicy=False):
         self.impact_point = None
+        self.interim_point = None
         super().__init__(config_file, controllers=controllers, as_subpolicy=as_subpolicy)
     
     def _reward(self, observation, proprioception_indices, action):
         done = False
-        if not np.all(action[0:2]):
+        reward = 0
+        # r, theta = observation["vect_obs"][proprioception_indices["polar_object_target"]: proprioception_indices["polar_robot_target"] + 2]
+        object_distance_to_target = self._calculate_object_target_distance()
+        if not np.any(action[0:2]) or object_distance_to_target < 0.1:
             done = True
-        return 0, done
+            reward = 1
+        return reward, done
     
     def get_observation(self):
         self.robot_state = self.robot.get_state()
@@ -197,14 +217,107 @@ class PushDeltaEnvironment(RuleBasedEnvironment):
         vect_obs = np.append(vect_obs, np.array([self.impact_point[2], self.impact_point[3]]))
         observation_indices["polar_robot_drive_until_point"] = len(vect_obs)
         vect_obs = np.append(vect_obs, np.array([self.impact_point[4], self.impact_point[5]]))
+
         observation_indices["step_i"] = len(vect_obs)
         vect_obs = np.append(vect_obs, self.step_i)
 
         point_cloud = self.robot_state["point_cloud"]
+        if self.interim_point is None:
+            self.interim_point = self.calculate_interim_point(vect_obs, observation_indices, point_cloud, self.impact_point[0])
+        polar_robot_interim_point_r, polar_robot_interim_point_theta = self.cartesian_to_polar_2d(self.interim_point[0], self.interim_point[1], robot_pose[0], robot_pose[1])
+        observation_indices["polat_robot_interim_point"] = len(vect_obs)
+        vect_obs = np.append(vect_obs, np.array([polar_robot_interim_point_r, polar_robot_interim_point_theta]))
 
         observation = {"image_obs": image_obs, "vect_obs": vect_obs, "point_cloud": point_cloud}
 
         return observation, observation_indices
+    
+    def calculate_interim_point(self, observation, observation_indices, point_cloud, impact_point_position):
+        # if any point in the point cloud falls on the line between the robot and the impact point, then we find the interim point
+        # otherwise the interim point is just the halfway point between the robot and the impact point
+        robot_pos, robot_orn = self.robot.get_base_pose()
+        object_pos, object_orn = self.current_object.get_base_pose()
+
+        useful_points = int(point_cloud[-1][1])
+        point_cloud = point_cloud[0:useful_points]
+        if len(point_cloud) == 0:
+            return impact_point_position
+
+        box_min, box_max = self.compute_bounding_box(point_cloud)
+        # import open3d as o3d
+        # pcd = o3d.geometry.PointCloud()
+        # pcd.points = o3d.utility.Vector3dVector(point_cloud)
+
+        print(f"box_min: {box_min}, box_max: {box_max}")
+        if self.line_intersects_box(robot_pos, impact_point_position, box_min, box_max):
+            # find the point in the point cloud that intersects the line between the robot and the impact point
+            print("line intersects box")
+            #Vector from current to target
+            direction = impact_point_position - robot_pos
+            direction /= np.linalg.norm(direction)  # Normalize
+            
+            # Find which axis has the largest absolute component in direction
+            major_axis = np.argmax(np.abs(direction))
+            
+            # Determine side of the bounding box to use based on direction
+            if direction[major_axis] > 0:
+                interim_point = box_max.copy()
+            else:
+                interim_point = box_min.copy()
+            
+            safety_margin = self._config["policy_parameters"]["interim_safety_margin"]
+            # Add/subtract safety margin
+            if major_axis == 0:
+                interim_point[1] += safety_margin if direction[1] > 0 else -safety_margin
+            elif major_axis == 1:
+                interim_point[0] += safety_margin if direction[0] > 0 else -safety_margin
+            # interim_point[1] += safety_margin if direction[1] > 0 else -safety_margin
+            
+            # Adjust interim_point to ensure it's not exactly on the bounding box for other dimensions
+            # for i in range(len(interim_point)):
+            #     if i != major_axis:
+            #         interim_point[i] = robot_pos[i] + direction[i] * np.linalg.norm(impact_point_position - robot_pos) / 2
+            print(f"interim_point: {interim_point}")
+            return interim_point
+        else:
+            return impact_point_position
+
+    
+    def compute_bounding_box(self, point_cloud):
+        """
+        Compute the axis-aligned bounding box of a point cloud.
+        
+        Parameters:
+        - point_cloud: An Nx3 numpy array of points.
+        
+        Returns:
+        - A tuple containing the minimum and maximum corners of the bounding box.
+        """
+        min_corner = np.min(point_cloud, axis=0)
+        max_corner = np.max(point_cloud, axis=0)
+        return min_corner, max_corner
+
+    def line_intersects_box(self, line_start, line_end, box_min, box_max):
+        """
+        Check if a line segment intersects an axis-aligned bounding box.
+        
+        Parameters:
+        - line_start, line_end: The endpoints of the line segment.
+        - box_min, box_max: The minimum and maximum corners of the bounding box.
+        
+        Returns:
+        - True if the line intersects the box, False otherwise.
+        """
+        # Cohen-Sutherland-like algorithm adapted for 3D line-box intersection
+        for i in range(3):  # Check for each dimension
+            if line_start[i] < box_min[i] and line_end[i] < box_min[i]:
+                return False
+            if line_start[i] > box_max[i] and line_end[i] > box_max[i]:
+                return False
+        # More detailed intersection tests can go here
+        # For simplicity, we return True, indicating potential intersection
+        return True
+
     
     def calculate_impact_point(self, observation, observation_indices):
         robot_pos, robot_orn = self.robot.get_base_pose()
@@ -229,25 +342,10 @@ class PushDeltaEnvironment(RuleBasedEnvironment):
         # p.addUserDebugText("impact_point", impact_point, [1, 0, 0], textSize=1, physicsClientId=self.client)
         return impact_point, impact_point_orientation, polar_robot_impact_point_r, polar_robot_impact_point_theta, polar_robot_drive_until_point_r, polar_robot_drive_until_point_theta
 
-        # Vector from object to target
-        vector_object_to_target = np.array(target_pos) - np.array(object_pos)
-        
-        # Normalize the vector to get the direction
-        direction_object_to_target = vector_object_to_target / np.linalg.norm(vector_object_to_target)
-        
-        # Calculate the robot's start position by extending the vector in the opposite direction
-        robot_start_position = object_pos - direction_object_to_target * self._config["policy_parameters"]["impact_point_distance"]
-
-        # p.addUserDebugLine(robot_start_position, robot_start_position + direction_object_to_target * 0.1, [1, 0, 0], 5, physicsClientId=self.client)
-        p.addUserDebugText("start", robot_start_position, [1, 0, 0], textSize=1, physicsClientId=self.client)
-        p.addUserDebugText("End", robot_start_position + direction_object_to_target * 0.1, [1, 0, 0], textSize=1, physicsClientId=self.client)
-
-        print(f"Robot start position: {robot_start_position}")
-        
-        return robot_start_position, direction_object_to_target
     
     def reset_env_memory(self):
         self.impact_point = None
+        self.interim_point = None
     
     def _get_observation_space(self):
         obs_space_dry_run = self.get_observation()

@@ -61,11 +61,16 @@ policy_executors:
       env_name: DragEnvironment-v0
       env_config_file: underactuated_manipulation_gym/resources/config/environment_config/drag_environment.yaml
       policy_class: DragPolicy
-    # reorint:
-    #   index: 4
-    #   env_name: RuleBasedEnvironment-v0
-    #   env_config_file: underactuated_manipulation_gym/resources/config/environment_config/reorient_environment.yaml
-    #   policy_class: ReorientPolicy
+    reorint:
+      index: 4
+      env_name: ReorientEnvironment-v0
+      env_config_file: underactuated_manipulation_gym/resources/config/environment_config/reorient_environment.yaml
+      policy_class: ReorientPolicy
+    push_delta:
+      index: 5
+      env_name: PushDeltaEnvironment-v0
+      env_config_file: underactuated_manipulation_gym/resources/config/environment_config/push_delta_environment.yaml
+      policy_class: PushDeltaPolicy
     
 
 policy_executor_mapping:
@@ -74,14 +79,15 @@ policy_executor_mapping:
   pick: 2
   reorient: 3
   drag: 4
+  push_delta: 5
 
 ######### ENVIRONMENT #########
 environment:
-  episode_length: 500
-  episode_length_test: 200
+  episode_length: 5
+  episode_length_test: 5
   object_dataset: random_urdfs
   global_scale: 6.0
-  specific_objects: [1] # this has to be empty if num_objects is not -1
+  specific_objects: [2] # this has to be empty if num_objects is not -1
   num_objects: -1
   target_radius: 1
   gui: True
@@ -107,6 +113,7 @@ robot:
       min: 0
       max: 0.1
       init: 0.1
+      force: 100
       joints:
         - 4
         - 5
@@ -145,7 +152,7 @@ robot:
         - 4
         - 5
       contact_force: False
-      normal_angle: False
+      normal_angle: True
       normal_angle_palm: False
     
     point_cloud:

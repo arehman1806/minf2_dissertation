@@ -69,13 +69,17 @@ class MetaEnvironment(BaseEnvironment):
         # action will be the index of the subpolicy to be used
         action = action[0]
         policy_executor = self._policy_executors[action]
-        observation, proprioception_indices = self.get_observation()
-        obs_policy, reward_policy, done_policy = policy_executor.execute_policy(steps=-1)
+        obs_policy, reward_policy, done_policy, success_policy = policy_executor.execute_policy(steps=-1)
 
+
+        observation, proprioception_indices = self.get_observation()
         reward, object_reahed_target = self._reward(observation, proprioception_indices, action)
         done = object_reahed_target or self.step_i >= self._episode_length
 
-        return self.get_observation()[0], reward, done, False, {}
+        observation["vect_obs"][-2:] = np.array([action, success_policy], dtype=np.float32)
+        info = {"success_policy": success_policy, "success_meta_policy": object_reahed_target}
+
+        return observation, reward, done, False, info
         
     def get_observation(self):
         self.robot_state = self.robot.get_state()
@@ -95,9 +99,14 @@ class MetaEnvironment(BaseEnvironment):
         observation_indices["polar_object_target"] = len(vect_obs)
         observation_indices["polar_robot_target"]  = len(vect_obs) + 2
         observation_indices["polar_robot_object"]  = len(vect_obs) + 4
-        
         # add polar coordinates to vector observation
         vect_obs = np.append(vect_obs, [object_target_polar_r, object_target_polar_theta, robot_target_polar_r, robot_target_polar_theta, robot_object_polar_r, robot_object_polar_theta])
+
+        # THESE TWO SHOULD BE AT THE VERY END OF THIS FUNCTION BECAUSE STEP FUNCTION APPENDS THE LAST TWO OBSERVATIONS
+        observation_indices["last_policy"] = len(vect_obs)
+        observation_indices["last_policy_success"] = len(vect_obs) + 1
+        vect_obs = np.append(vect_obs, np.array([-1, 1]))
+
         observation = {"image_obs": image_obs, "vect_obs": vect_obs}
 
         return observation, observation_indices

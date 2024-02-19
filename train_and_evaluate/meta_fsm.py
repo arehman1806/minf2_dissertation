@@ -13,6 +13,7 @@ import sys
 sys.path.append("/home/arehman/dissertation/")
 import underactuated_manipulation_gym
 from rule_based_policies.meta import FSMMetaPolicy
+from rule_based_policies.meta_recovery_behaviour import MetaRecoveryBehaviourPolicy
 
 NUM_TRAILS = 10
 
@@ -25,7 +26,8 @@ obs = env.reset()
 policy_kwargs = dict(
     net_arch=dict(pi=[512, 512, 512, 512], vf=[512, 512, 512, 512])
 )
-model = FSMMetaPolicy(env, policy_kwargs)
+# model = FSMMetaPolicy(env, policy_kwargs)
+model = MetaRecoveryBehaviourPolicy(env, policy_kwargs)
 
 for trial in range(NUM_TRAILS):
     done = False

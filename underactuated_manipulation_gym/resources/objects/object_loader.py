@@ -37,6 +37,7 @@ class ObjectLoader:
         if self.current_object is not None:
             self._remove_object()
         self.current_object = self._spawn_object(pose)
+        p.changeDynamics(self.current_object.get_ids()[1], -1, spinningFriction=self.dynamics["spinning_friction"])
         return self.current_object
 
     def empty_scene(self):

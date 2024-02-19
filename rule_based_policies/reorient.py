@@ -16,18 +16,11 @@ class ReorientPolicy(RuleBasedPolicy):
         self.kp_angular = self.policy_params["kp_angular"]
 
 
-    def predict(self, observation):
-        """
-        Reorients the robot to face the object.
-        """
-        # pc = observation["point_cloud"][0]
+    def predict(self, observation, deterministic=True):
         vect_obs = observation["vect_obs"][0]
-        # num_useful_points = int(pc[-1][1])
-        # pc = pc[0: num_useful_points]
         target_distance, target_angle = vect_obs[self.proprioception_indices["polar_robot_object"]: self.proprioception_indices["polar_robot_object"] + 2]
-        robot_position = vect_obs[self.proprioception_indices["robot_position"]: self.proprioception_indices["robot_position"] + 2]
         robot_heading = vect_obs[self.proprioception_indices["robot_orientation"] + 2]
-        
+
         desired_heading = target_angle % (2 * math.pi)
 
         # Calculate heading error
@@ -39,16 +32,26 @@ class ReorientPolicy(RuleBasedPolicy):
             heading_error += 2 * math.pi
 
         # Angular velocity control
-        angular_velocity = self.kp_angular * heading_error  # Tune for responsiveness
+        angular_velocity = self.kp_angular * heading_error
 
-        # Calculate distance error (how far off from the desired distance we are)
+        # Calculate distance error
         distance_error = target_distance - self.desired_distance
 
-        # Dynamic linear velocity control, positive for forward, negative for reverse
-        # Adjusts based on the distance error; moves forward if too far, backwards if too close
+        # Dynamic linear velocity control
         linear_velocity = self.kp_distance * distance_error
+
+        # Consider reducing linear velocity as the angular correction increases
+        if abs(heading_error) > 0.1:  # Arbitrary threshold; adjust based on your needs
+            linear_velocity *= (1 - min(abs(heading_error) / math.pi, 1))  # Scale down linear velocity based on heading error
 
         action = np.ones((self._env.num_envs, 3))
         action[:, 0] = linear_velocity
         action[:, 1] = angular_velocity
+
+        # Stop condition based on a more forgiving distance_error threshold
+        if abs(distance_error) < 0.2 and abs(heading_error) < 0.1:  # Adjusted threshold
+            action[:, 0] = 0  # Stop moving
+            action[:, 1] = 0
+
         return action, None
+

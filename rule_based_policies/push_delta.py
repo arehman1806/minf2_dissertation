@@ -20,9 +20,10 @@ class PushDeltaPolicy(RuleBasedPolicy):
         self.step_i = 0
         self.stage_1_i = 0
         self.stage = 0
+        self.stop_position = False
 
 
-    def predict(self, observation):
+    def predict(self, observation, deterministic=True):
         """
         Reorients the robot to face the object, adding the possibility of driving in reverse if it's a shorter path.
         """
@@ -32,11 +33,15 @@ class PushDeltaPolicy(RuleBasedPolicy):
         if self.step_i > step_i_current:
             self.stage = 0
             self.stage_1_i = 0
+            self.stop_position = False
         self.step_i = step_i_current
 
+
         if self.stage == 0:
-            target_distance, target_angle = vect_obs[self.proprioception_indices["polar_robot_impact_point"]: self.proprioception_indices["polar_robot_impact_point"] + 2]
+            target_distance, target_angle = vect_obs[self.proprioception_indices["polat_robot_interim_point"]: self.proprioception_indices["polat_robot_interim_point"] + 2]
         elif self.stage == 1:
+            target_distance, target_angle = vect_obs[self.proprioception_indices["polar_robot_impact_point"]: self.proprioception_indices["polar_robot_impact_point"] + 2]
+        elif self.stage == 2:
             if self.stage_1_i >= self.drive_until_distance * 50:
                 action[:, 0] = 0
                 action[:, 1] = 0
@@ -51,6 +56,7 @@ class PushDeltaPolicy(RuleBasedPolicy):
         # Adjust target angle to decide the driving direction
         target_angle_rel = ((target_angle - robot_heading + math.pi) % (2 * math.pi)) - math.pi
         driving_reverse = abs(target_angle_rel) > math.pi / 2
+        # print(f"driving_reverse: {driving_reverse}")
 
         if driving_reverse:
             desired_heading = (target_angle + math.pi) % (2 * math.pi)
@@ -58,18 +64,24 @@ class PushDeltaPolicy(RuleBasedPolicy):
             desired_heading = target_angle
 
         # Position control
-        if target_distance > self.distance_threshold:  # Distance threshold determines when to switch focus to orientation
+        if target_distance > (self.distance_threshold):  # Distance threshold determines when to switch focus to orientation
             heading_error = desired_heading - robot_heading
+            # print("True")
         else:
             # Orientation control
+            # print("Not True")
             desired_orientation = goal_orientation
             heading_error = desired_orientation - robot_heading
+            if self.stage == 0:
+                heading_error = 0.01
 
         # Normalize the error
         if heading_error > math.pi:
             heading_error -= 2 * math.pi
+            # print("heading error > pi")
         elif heading_error < -math.pi:
             heading_error += 2 * math.pi
+            # print("heading error < -pi")
 
         # Angular velocity control
         angular_velocity = self.kp_angular * heading_error
@@ -82,12 +94,15 @@ class PushDeltaPolicy(RuleBasedPolicy):
                 linear_velocity = min(self.base_speed, self.kp_distance * target_distance)  # Forward otherwise
         else:
             # Slow down as orientation becomes the priority
-            linear_velocity = 0.0001 * (self.distance_threshold - target_distance)
+            linear_velocity = 0
 
         # Update stage to 1 when close to the target and orientation is nearly aligned
-        if target_distance < self.distance_threshold and abs(heading_error) < 0.1:
-            self.stage = 1
+        if target_distance < self.distance_threshold and abs(heading_error) < self.distance_threshold:
+            print(f"stage {self.stage} -> {self.stage + 1}")
+            self.stage += 1
+            self.stop_position = False
 
+        print(f"heading_error: {heading_error}, target_distance: {target_distance}, stage: {self.stage}")
         action[:, 0] = linear_velocity
         action[:, 1] = angular_velocity
         return action, None

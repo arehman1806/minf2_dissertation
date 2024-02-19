@@ -19,26 +19,22 @@ class BasePolicyExecutor:
     def execute_policy(self, steps=-1):
         done = False
         obs = self._env.reset()
-        # s = self._env._get_observation()[0]
-        # if s in self._env.initial_state(s):
-        #     done = True
-        #     obs = s
-        #     rewards = -1
         rewards = 0
         if steps == -1:
             steps = 1e6
         
         while not done and steps > 0:
             action, _state = self._model.predict(obs, deterministic=True)
-            obs, reward, done, _ = self._env.step(action)
+            obs, reward, done, info = self._env.step(action)
+            success = info[0]["success"]
             reward = reward[0]
             done = done[0]
             rewards += reward
             steps -= 1
             if done:
-                print(f"Finished policy {self._env_config['name']}")
-                return obs, rewards, done
-        return obs, rewards, done
+                # print(f"Finished policy {self._env_config['name']}. success: {success} rewards: {rewards}")
+                return obs, rewards, done, success
+        return obs, rewards, done, success
     
     def _create_env(self, env_config_file_path, controllers):
         env_name = self._env_config["name"]

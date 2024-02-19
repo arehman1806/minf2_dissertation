@@ -14,7 +14,7 @@ env = gym.make("queenie_gym_envs/PushDeltaEnvironment-v0", config_file="./undera
 env = DummyVecEnv([lambda: env])
 obs = env.reset()
 model = PushDeltaPolicy(env)
-for i in range(1000):
+for i in range(10000):
     action, _state = model.predict(obs)
     obs, reward, done, _ = env.step(action)
     if done:

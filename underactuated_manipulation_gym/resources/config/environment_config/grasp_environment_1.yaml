@@ -63,6 +63,7 @@ robot:
       min: 0
       max: 0.1
       init: 0.1
+      force: 20
       joints:
         - 4
         - 5

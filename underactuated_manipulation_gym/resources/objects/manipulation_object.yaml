@@ -18,6 +18,6 @@ spawn_config:
   max_yaw: 1.57
 dynamics:
   mass: 0.1
-  rolling_friction: 1
-  lateral_friction: 1
-  spinning_friction: 1
+  rolling_friction: 0
+  lateral_friction: 0
+  spinning_friction: 0

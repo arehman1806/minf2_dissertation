@@ -2,3 +2,4 @@ from rule_based_policies.pick import PickPolicy
 from rule_based_policies.drag import DragPolicy
 from rule_based_policies.reorient import ReorientPolicy
 from rule_based_policies.push_delta import PushDeltaPolicy
+from rule_based_policies.meta_recovery_behaviour import MetaRecoveryBehaviourPolicy

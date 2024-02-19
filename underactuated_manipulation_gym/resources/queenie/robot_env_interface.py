@@ -85,7 +85,7 @@ class QueenieRobotEnvInterface():
         if self._config["actuators"]["gripper"] or use_gripper:
             position = self._config["parameters"]["gripper"]["max"] if action[-1] > 0 else self._config["parameters"]["gripper"]["min"]
             for joint in self._config["parameters"]["gripper"]["joints"]:
-                p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=position, force=200)
+                p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=position, force=self._config["parameters"]["gripper"]["force"])
             # p.setJointMotorControl2(self.robot, 4, p.POSITION_CONTROL, targetPosition=position)
             # p.setJointMotorControl2(self.robot, 5, p.POSITION_CONTROL, targetPosition=position)
 
