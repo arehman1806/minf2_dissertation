@@ -10,7 +10,7 @@ import time
 import numpy as np
 import pybullet as p
 
-exp_name = "single_object_push_256x3_networks"
+exp_name = "single_push_linear_reward"
 
 def convert_obs_from_single_to_vec(obs):
     obs["image_obs"] = np.expand_dims(obs["image_obs"], axis=0)
@@ -23,14 +23,14 @@ def convert_action_from_vec_to_single(action):
 
 env = gym.make("queenie_gym_envs/PushEnvironment-v0", config_file="./underactuated_manipulation_gym/resources/config/environment_config/push_environment.yaml")
 env = DummyVecEnv([lambda: env])
-env = VecNormalize(env, norm_obs=False, norm_reward=False, norm_obs_keys=["vect_obs"])
-env.load(f"./runs/push/vec_normalize/{exp_name}", env)
+# env = VecNormalize(env, norm_obs=False, norm_reward=False, norm_obs_keys=["vect_obs"])
+# env.load(f"./runs/push/vec_normalize/{exp_name}", env)
 # robot = env.get_robot()
-model = PPO.load(f"./runs/push/{exp_name}/{exp_name}_500000_steps.zip", env=env)
+model = PPO.load(f"./runs/push/{exp_name}/{exp_name}_400000_steps.zip", env=env)
 obs = env.reset()
 # obs = convert_obs_from_single_to_vec(obs)
-for i in range(1000):
-    action, _state = model.predict(obs)
+for i in range(10000):
+    action, _state = model.predict(obs, deterministic=True)
     # action = convert_action_from_vec_to_single(action)
     obs, reward, done, _ = env.step(action)
     # obs = convert_obs_from_single_to_vec(obs)

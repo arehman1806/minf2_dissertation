@@ -26,7 +26,7 @@ class PushEnvironment(BaseOptionEnvironment):
         # observation space will consist of image and vector. vector will contain information 
         # about object and target polar coordinates, robot and target polar coordinates, robot and 
         #object polar coordinates, and proprioception
-        reward = 0
+        reward = -0.02
 
         # penalize large movements, both planer movement and joint angles
         linear_vel, angular_vel = action[:2]
@@ -47,7 +47,7 @@ class PushEnvironment(BaseOptionEnvironment):
         distance = self._calculate_object_target_distance()
         if self.previous_distance is None:
             self.previous_distance = distance
-        reward += 10 * (self.previous_distance - distance)
+        reward += 1 * (self.previous_distance - distance)
         self.previous_distance = distance
 
 
@@ -61,7 +61,8 @@ class PushEnvironment(BaseOptionEnvironment):
         if done:
             self.previous_distance = None
             if distance < self._environment_config["target_radius"]:
-                reward += 300
+                # reward += 300
+                pass
             print("object within 1m of target: ", distance < self._environment_config["target_radius"], "reward", self.cumm_reward)
         # print(reward)
         self.cumm_reward += reward

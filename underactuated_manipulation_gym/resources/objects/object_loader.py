@@ -40,6 +40,7 @@ class ObjectLoader:
         if self.current_object is not None:
             self._remove_object()
         self.current_object = self._spawn_object(pose)
+        print(f"current object: {self.current_object.get_ids()}")
         if self.dynamics is not None:
             p.changeDynamics(self.current_object.get_ids()[1], -1, spinningFriction=self.dynamics["spinning_friction"])
         return self.current_object

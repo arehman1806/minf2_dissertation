@@ -39,7 +39,8 @@ class QueenieRobotEnvInterface():
     def get_base_pose(self):
         return p.getBasePositionAndOrientation(self.robot, self.client)
     
-    
+    def get_wheel_positions(self):
+        return [p.getLinkState(self.robot, i, self.client)[0] for i in [8, 9]]
     """
     Resets the robot to the given position and orientation
     """
@@ -85,7 +86,11 @@ class QueenieRobotEnvInterface():
         if self._config["actuators"]["gripper"] or use_gripper:
             position = self._config["parameters"]["gripper"]["max"] if action[-1] > 0 else self._config["parameters"]["gripper"]["min"]
             for joint in self._config["parameters"]["gripper"]["joints"]:
-                p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=position, force=self._config["parameters"]["gripper"]["force"])
+                if self._config["parameters"]["gripper"]["use_dynamic_force"]:
+                    force = action[-2]
+                else:
+                    force = self._config["parameters"]["gripper"]["force"]
+                p.setJointMotorControl2(self.robot, joint, p.POSITION_CONTROL, targetPosition=position, force=force)
             # p.setJointMotorControl2(self.robot, 4, p.POSITION_CONTROL, targetPosition=position)
             # p.setJointMotorControl2(self.robot, 5, p.POSITION_CONTROL, targetPosition=position)
 

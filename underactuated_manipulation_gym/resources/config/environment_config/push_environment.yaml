@@ -44,7 +44,7 @@ environment:
   specific_objects: [1] # this has to be empty if num_objects is not -1
   num_objects: -1
   target_radius: 1
-  gui: false
+  gui: True
 
 ######### ROBOT #########
 robot:
@@ -80,8 +80,8 @@ robot:
       fov: 80
       depth: False
       hha: False
-      rgb: False
-      greyscale: True
+      rgb: True
+      greyscale: False
       semantic: False
       camera_near: 0.005
       camera_far: 3.0

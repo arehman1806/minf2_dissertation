@@ -117,10 +117,10 @@ class Camera_Sensor(Sensor):
                 hha = getHHA(self.intrinsic_matrix, depth, depth)
                 hha = hha.transpose(2, 0, 1)
                 images.append(hha)
-                # cv2.imshow("hha", hha[0])
-                # cv2.imshow("hha1", hha[1])
-                # cv2.imshow("hha2", hha[2])
-                # cv2.waitKey(1)
+                cv2.imshow("hha", hha[0])
+                cv2.imshow("hha1", hha[1])
+                cv2.imshow("hha2", hha[2])
+                cv2.waitKey(1)
             # cv2.imwrite("chanel_1.png", hha[0])
             # cv2.imwrite("chanel_2.png", hha[1])
             # cv2.imwrite("chanel_3.png", hha[2])
@@ -138,7 +138,8 @@ class Camera_Sensor(Sensor):
         # Optionally, add semantic image layer
         if self.semantic:
             semantic_img = np.expand_dims(semantic_img, axis=0)  # Make semantic a single-channel 3D image
-            
+        if len(images) == 0:
+            return np.array([])
         stacked_observation = np.vstack(images)
         return stacked_observation
 

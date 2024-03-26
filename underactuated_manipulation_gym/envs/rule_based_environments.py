@@ -5,6 +5,7 @@ import gymnasium as gym
 from gymnasium import spaces
 # Local dependencies
 from underactuated_manipulation_gym.envs.base_option_environment import BaseOptionEnvironment
+from scipy.spatial.transform import Rotation as R
 
 
 class RuleBasedEnvironment(BaseOptionEnvironment):
@@ -236,6 +237,7 @@ class PushDeltaEnvironment(RuleBasedEnvironment):
         # if any point in the point cloud falls on the line between the robot and the impact point, then we find the interim point
         # otherwise the interim point is just the halfway point between the robot and the impact point
         robot_pos, robot_orn = self.robot.get_base_pose()
+        left_wheel_pos, right_wheel_pos = self.robot.get_wheel_positions()
         object_pos, object_orn = self.current_object.get_base_pose()
 
         useful_points = int(point_cloud[-1][1])
@@ -248,10 +250,20 @@ class PushDeltaEnvironment(RuleBasedEnvironment):
         # pcd = o3d.geometry.PointCloud()
         # pcd.points = o3d.utility.Vector3dVector(point_cloud)
 
-        print(f"box_min: {box_min}, box_max: {box_max}")
-        if self.line_intersects_box(robot_pos, impact_point_position, box_min, box_max):
+        # print(f"box_min: {box_min}, box_max: {box_max}")
+        if self.line_intersects_box(robot_pos, impact_point_position, box_min, box_max) or \
+                self.line_intersects_box(left_wheel_pos, impact_point_position, box_min, box_max) or \
+                self.line_intersects_box(right_wheel_pos, impact_point_position, box_min, box_max):
             # find the point in the point cloud that intersects the line between the robot and the impact point
-            print("line intersects box")
+            # robot_pos, robot_orn = self.robot.get_base_pose()
+            # rotation = R.from_quat(robot_orn)
+            # rotation_matrix = rotation.as_matrix()
+            # inv_rotation_matrix = rotation_matrix.T
+            # inv_translation = -np.array(robot_pos)
+            # box_max_local = inv_rotation_matrix.dot(box_max + inv_translation)
+            # box_min_local = inv_rotation_matrix.dot(box_min + inv_translation)
+            # print(f"box_min_local: {box_min_local}, box_max_local: {box_max_local} box_min: {box_min}, box_max: {box_max}")
+            # print("line intersects box")
             #Vector from current to target
             direction = impact_point_position - robot_pos
             direction /= np.linalg.norm(direction)  # Normalize
@@ -277,7 +289,7 @@ class PushDeltaEnvironment(RuleBasedEnvironment):
             # for i in range(len(interim_point)):
             #     if i != major_axis:
             #         interim_point[i] = robot_pos[i] + direction[i] * np.linalg.norm(impact_point_position - robot_pos) / 2
-            print(f"interim_point: {interim_point}")
+            # print(f"interim_point: {interim_point}")
             return interim_point
         else:
             return impact_point_position

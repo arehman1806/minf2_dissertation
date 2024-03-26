@@ -87,7 +87,7 @@ environment:
   episode_length_test: 5
   object_dataset: random_urdfs
   global_scale: 6.0
-  specific_objects: [2] # this has to be empty if num_objects is not -1
+  specific_objects: [1] # this has to be empty if num_objects is not -1
   num_objects: -1
   target_radius: 1
   gui: True

@@ -40,8 +40,8 @@ environment:
   episode_length_test: 50
   object_dataset: random_urdfs
   global_scale: 6.0
-  specific_objects: [] # this has to be empty if num_objects is not -1
-  num_objects: 5
+  specific_objects: [1] # this has to be empty if num_objects is not -1
+  num_objects: -1
   target_radius: 1
   gui: True
 
@@ -68,10 +68,11 @@ robot:
         max: 0.5
         init: 0
     gripper:
+      use_dynamic_force: True
       min: 0
       max: 0.1
       init: 0.1
-      force: 100
+      force: 0.5
       joints:
         - 4
         - 5
@@ -85,7 +86,7 @@ robot:
       depth: False
       hha: False
       rgb: False
-      greyscale: True
+      greyscale: False
       semantic: False
       camera_near: 0.005
       camera_far: 3.0

@@ -42,7 +42,7 @@ environment:
   global_scale: 6.0
   specific_objects: [] # this has to be empty if num_objects is not -1
   num_objects: 5
-  target_radius: 1
+  target_radius: 2
   gui: True
 
 ######### POLICY PARAMETERS #########

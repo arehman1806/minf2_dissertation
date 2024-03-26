@@ -36,7 +36,7 @@ environment:
   name: PushDeltaEnvironment-v0
   model_class: PushDeltaPolicy
   vec_normalize_path: null
-  episode_length: 300
+  episode_length: 500
   episode_length_test: 50
   object_dataset: random_urdfs
   global_scale: 6.0
@@ -52,10 +52,12 @@ policy_parameters:
   impact_point_distance: 1.1
   drive_until_distance: 1
   base_speed: 1
-  kp_linear: 0.5
+  kp_linear: 0.7
   kp_angular: 1.0
   distance_threshold: 0.3
   interim_safety_margin: 2
+  angle_threshold_begin_correction: 0.2
+  angle_threshold_end_correction: 0.05
   
 
 ######### ROBOT #########

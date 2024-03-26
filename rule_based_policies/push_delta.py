@@ -17,6 +17,8 @@ class PushDeltaPolicy(RuleBasedPolicy):
         self.base_speed = self.policy_params["base_speed"]
         self.distance_threshold = self.policy_params["distance_threshold"]
         self.drive_until_distance = self.policy_params["drive_until_distance"]
+        self.angle_threshold_begin_correction = self.policy_params["angle_threshold_begin_correction"]
+        self.angle_threshold_end_correction = self.policy_params["angle_threshold_end_correction"]
         self.step_i = 0
         self.stage_1_i = 0
         self.stage = 0
@@ -55,51 +57,79 @@ class PushDeltaPolicy(RuleBasedPolicy):
 
         # Adjust target angle to decide the driving direction
         target_angle_rel = ((target_angle - robot_heading + math.pi) % (2 * math.pi)) - math.pi
-        driving_reverse = abs(target_angle_rel) > math.pi / 2
-        # print(f"driving_reverse: {driving_reverse}")
 
-        if driving_reverse:
-            desired_heading = (target_angle + math.pi) % (2 * math.pi)
-        else:
-            desired_heading = target_angle
+        needs_orientation_correction = abs(target_angle_rel) > self.angle_threshold_begin_correction
 
-        # Position control
-        if target_distance > (self.distance_threshold):  # Distance threshold determines when to switch focus to orientation
-            heading_error = desired_heading - robot_heading
-            # print("True")
-        else:
-            # Orientation control
-            # print("Not True")
-            desired_orientation = goal_orientation
-            heading_error = desired_orientation - robot_heading
+        close_to_target = target_distance < self.distance_threshold
+        correct_goal_orientation = abs(goal_orientation - robot_heading) > self.angle_threshold_end_correction
+
+        linear_velocity = 0
+        angular_velocity = 0
+
+        if needs_orientation_correction and not close_to_target:
+            angular_velocity = self.kp_angular * target_angle_rel
+        elif not close_to_target:
+            linear_velocity = min(self.base_speed, self.kp_distance * target_distance)
+        elif close_to_target and correct_goal_orientation:
             if self.stage == 0:
-                heading_error = 0.01
-
-        # Normalize the error
-        if heading_error > math.pi:
-            heading_error -= 2 * math.pi
-            # print("heading error > pi")
-        elif heading_error < -math.pi:
-            heading_error += 2 * math.pi
-            # print("heading error < -pi")
-
-        # Angular velocity control
-        angular_velocity = self.kp_angular * heading_error
-
-        # Linear velocity control, with reverse driving logic
-        if target_distance > self.distance_threshold:
-            if driving_reverse:
-                linear_velocity = -min(self.base_speed, self.kp_distance * target_distance)  # Reverse if shorter
+                correct_goal_orientation = False
+                angular_velocity = self.kp_angular * 0.00001
             else:
-                linear_velocity = min(self.base_speed, self.kp_distance * target_distance)  # Forward otherwise
+                goal_orientation_rel = ((goal_orientation - robot_heading + math.pi) % (2 * math.pi)) - math.pi
+                angular_velocity = self.kp_angular * goal_orientation_rel
         else:
-            # Slow down as orientation becomes the priority
-            linear_velocity = 0
+            linear_velocity = 0.00001
+            angular_velocity = 0.0001
+
+
+        # driving_reverse = abs(target_angle_rel) > math.pi / 2
+        # # print(f"driving_reverse: {driving_reverse}")
+
+        # if driving_reverse:
+        #     desired_heading = (target_angle + math.pi) % (2 * math.pi)
+        # else:
+        #     desired_heading = target_angle
+
+        # # Position control
+        # if target_distance > (self.distance_threshold):  # Distance threshold determines when to switch focus to orientation
+        #     heading_error = desired_heading - robot_heading
+        #     # print("True")
+        # else:
+        #     # Orientation control
+        #     # print("Not True")
+        #     desired_orientation = goal_orientation
+        #     heading_error = desired_orientation - robot_heading
+        #     if self.stage == 0:
+        #         heading_error = 0.01
+
+        # # Normalize the error
+        # if heading_error > math.pi:
+        #     heading_error -= 2 * math.pi
+        #     # print("heading error > pi")
+        # elif heading_error < -math.pi:
+        #     heading_error += 2 * math.pi
+        #     # print("heading error < -pi")
+
+        # # Angular velocity control
+        # angular_velocity = self.kp_angular * heading_error
+
+        # # Linear velocity control, with reverse driving logic
+        # if target_distance > self.distance_threshold:
+        #     if driving_reverse:
+        #         linear_velocity = -min(self.base_speed, self.kp_distance * target_distance)  # Reverse if shorter
+        #     else:
+        #         linear_velocity = min(self.base_speed, self.kp_distance * target_distance)  # Forward otherwise
+        # else:
+        #     # Slow down as orientation becomes the priority
+        #     linear_velocity = 0
 
         # Update stage to 1 when close to the target and orientation is nearly aligned
-        if target_distance < self.distance_threshold and abs(heading_error) < self.distance_threshold:
+        if target_distance < self.distance_threshold and not correct_goal_orientation:
             # print(f"stage {self.stage} -> {self.stage + 1}")
             self.stage += 1
+            if self.stage == 3:
+                linear_velocity = 0
+                angular_velocity = 0
             self.stop_position = False
 
         # print(f"heading_error: {heading_error}, target_distance: {target_distance}, stage: {self.stage}")

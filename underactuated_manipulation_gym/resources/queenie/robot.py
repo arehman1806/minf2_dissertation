@@ -18,6 +18,7 @@ class QueenieRobot():
 
         f_name = os.path.join(os.path.dirname(__file__), "urdfs/queenie_pb.urdf")
         self.robot = p.loadURDF(f_name, [0, 0, 0.1], p.getQuaternionFromEuler([0, 0, 0]), physicsClientId=self.client)
+        print(f"robot id: {self.robot}")
 
         self._setup_joint_motors()
         # self._setup_gear_constraints()

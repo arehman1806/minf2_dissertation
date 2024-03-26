@@ -56,7 +56,7 @@ class MetaRecoveryBehaviourPolicy(RuleBasedPolicy):
                 next_policy = actions_dict["reorient"]
             else:
                 # If pushed successfully, keep pushing
-                next_policy = actions_dict["push_delta"]
+                next_policy = actions_dict["reorient"]
         elif self.last_executed_policy == actions_dict["pick"]:
             if not self.last_policy_success:
                 # If pick fails, reorient and then pick
