@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import pandas as pd
-exp_name = "force_troque"
+exp_name = "rotational_slip_constant"
 # Function for moving average
 def moving_average(data, window_size):
     window = np.ones(int(window_size)) / float(window_size)
@@ -107,6 +107,7 @@ interface_w_angular = p.addUserDebugParameter("w", -2, 2, 0)
 object_mass = p.addUserDebugParameter("object_mass", 0.1, 1, 0.1)
 distances = []
 force_measurements = []
+normalised_torques = np.array([0.0], dtype=np.float64)
 smoothed_rolls = []
 smoothed_pitchs = []
 smoothed_yaws = []
@@ -121,6 +122,7 @@ events = []
 neck_y = 1.5
 
 
+
 capture_timesteps = [50, 100, 150, 200]
 # p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 p.changeDynamics(1, -1, mass=0.9)
@@ -129,11 +131,10 @@ p.changeDynamics(1, -1, mass=0.9)
 plt.ion()
 
 # Initialize two subplots
-fig, (ax1, ax2, ax3, ax4) = plt.subplots(2, 2, figsize=(10, 10))  # Creates two subplots
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(5, 10), sharex=True)
 
 # Setup the first subplot for the angular velocities
-ax1.set_xlabel("Step")
-ax1.set_ylabel("first order derivative of orientation (rad/unit sim time)")
+ax1.set_ylabel("Δ relative orientation (rad/unit sim time)")
 ax1.set_xlim(0, timesteps)
 ax1.set_ylim(-0.05, 0.05)
 line1, = ax1.plot([], [], label="Δ roll")
@@ -144,13 +145,27 @@ ax1.legend()
 # Setup the second subplot for the force
 ax2.set_xlabel("Step")
 ax2.set_ylabel("Force (N)")
-ax2.set_xlim(0, timesteps)
-# Adjust these limits based on expected force ranges
-ax2.set_ylim(-40, 40)  # Update this as per your expected force value range
+ax2.set_ylim(-10, 10)  # Update this as per your expected force value range
 line4, = ax2.plot([], [], label="Force", color="magenta")  # 'm-' for magenta color
 ax2.legend()
 
+# ax3.set_xlabel("Step")
+# ax3.set_ylabel("Force (N)")
+# ax3.set_xlim(0, timesteps)
+# # Adjust these limits based on expected force ranges
+# ax3.set_ylim(-40, 40)  # Update this as per your expected force value range
+# line5, = ax3.plot([], [], label="Joint Reaction Force", color="magenta")  # 'm-' for magenta color
+# ax3.legend()
+
+# ax4.set_xlabel("Step")
+# ax4.set_ylabel("Torque (N.m)")
+# ax4.set_xlim(0, timesteps)
+# # Adjust these limits based on expected force ranges
+# ax4.set_ylim(-5, 5)  # Update this as per your expected force value range
+# line6, = ax4.plot([], [], label="Joint Reaction Torque", color="magenta")  # 'm-' for magenta color
+
 force = 0.5
+p.enableJointForceTorqueSensor(2, 3, 1)
 
 for i in range(100):
     p.stepSimulation()
@@ -164,7 +179,7 @@ for i in range(20):
     action = np.array([v, w_angular, neck_y, neck_x, force, gripper_pos])
     obs, reward, done, _, _ = env.step(action)
 for i in range(timesteps):
-    neck_y = neck_y - 0.01 if neck_y > 0 else neck_y
+    neck_y = neck_y - 0.01 if neck_y > -1.5 else neck_y
     p.changeDynamics(1, -1, mass=p.readUserDebugParameter(object_mass))
     v = p.readUserDebugParameter(interface_v)
     w_angular = p.readUserDebugParameter(interface_w_angular)
@@ -181,6 +196,13 @@ for i in range(timesteps):
     # Simulate getting new euler angles
     distance, rel_orn, rel_orn_euler = get_relative_position_and_orientation(2, 3, 1, -1)  # Placeholder for your actual function
 
+    # get for torque sensor reading
+    wrench = p.getJointState(2, 3)[2]
+    force_jrf = wrench[0:3]
+    torque = wrench[3:6]
+    normalised_force = np.linalg.norm(force_jrf)
+    normalised_torque = np.linalg.norm(torque)
+    normalised_torques = np.append(normalised_torques, normalised_torque)
     # Update lists
     distances.append(distance)
     euler_rolls = np.append(euler_rolls, rel_orn_euler[0])
@@ -211,6 +233,7 @@ for i in range(timesteps):
         smoothed_rolls = moving_average(np.array(angular_velocity_rolls), window_size)
         smoothed_pitchs = moving_average(np.array(angular_velocity_pitchs), window_size)
         smoothed_yaws = moving_average(np.array(angular_velocity_yaws), window_size)
+        normalised_torques = moving_average(np.array(normalised_torques), window_size)
 
         # Thresholds for detecting slips
         threshold = 0.001  # Example threshold, adjust based on your data
@@ -222,26 +245,47 @@ for i in range(timesteps):
                 if abs(smoothed_yaws[-1]) > vel:
                     vel = abs(smoothed_yaws[-1])
             print(f"Slip detected at timestep {i}")
-            force += 100 * vel
+            # force += 100 * vel
+            force += 0
     
     force_measurements.append(force)
     # Update plots for the first subplot (angular velocities)
-    line1.set_xdata(np.append(line1.get_xdata(), i))
-    line1.set_ydata(np.append(line1.get_ydata(), smoothed_rolls[-1]))  # Assuming 'smoothed_rolls' has been defined and updated as before
-    line2.set_xdata(np.append(line2.get_xdata(), i))
-    line2.set_ydata(np.append(line2.get_ydata(), smoothed_pitchs[-1]))
-    line3.set_xdata(np.append(line3.get_xdata(), i))
-    line3.set_ydata(np.append(line3.get_ydata(), smoothed_yaws[-1]))
+    if i > 290:
+        line1.set_xdata(np.append(line1.get_xdata(), i))
+        line1.set_ydata(np.append(line1.get_ydata(), 0))  # Assuming 'smoothed_rolls' has been defined and updated as before
+        line2.set_xdata(np.append(line2.get_xdata(), i))
+        line2.set_ydata(np.append(line2.get_ydata(), 0))
+        line3.set_xdata(np.append(line3.get_xdata(), i))
+        line3.set_ydata(np.append(line3.get_ydata(), 0))
+    else:
+        line1.set_xdata(np.append(line1.get_xdata(), i))
+        line1.set_ydata(np.append(line1.get_ydata(), smoothed_rolls[-1]))  # Assuming 'smoothed_rolls' has been defined and updated as before
+        line2.set_xdata(np.append(line2.get_xdata(), i))
+        line2.set_ydata(np.append(line2.get_ydata(), smoothed_pitchs[-1]))
+        line3.set_xdata(np.append(line3.get_xdata(), i))
+        line3.set_ydata(np.append(line3.get_ydata(), smoothed_yaws[-1]))
 
     # Update plots for the second subplot (force)
     line4.set_xdata(np.append(line4.get_xdata(), i))
     line4.set_ydata(np.append(line4.get_ydata(), force))
+
+    # # Update plots for the third subplot (joint reaction force)
+    # line5.set_xdata(np.append(line5.get_xdata(), i))
+    # line5.set_ydata(np.append(line5.get_ydata(), normalised_force))
+
+    # # Update plots for the fourth subplot (joint reaction torque)
+    # line6.set_xdata(np.append(line6.get_xdata(), i))
+    # line6.set_ydata(np.append(line6.get_ydata(), normalised_torques[-1]))
 
     # Adjust axes limits dynamically if necessary for both subplots
     ax1.relim()
     ax1.autoscale_view()
     ax2.relim()
     ax2.autoscale_view()
+    # ax3.relim()
+    # ax3.autoscale_view()
+    # ax4.relim()
+    # ax4.autoscale_view()
     
     # Draw both subplots
     plt.draw()
@@ -251,6 +295,13 @@ for i in range(timesteps):
     plt.pause(0.001)
 # Keep the final plot open
 plt.ioff()  # Turn off interactive mode
+
+# add vertical line for lost contact and add label for this event
+ax1.axvline(x=290, color='r', linestyle='--')
+ax1.text(290, 0.03, 'Lost Contact', rotation=90)
+ax2.axvline(x=290, color='r', linestyle='--')
+ax2.text(290, 5, 'Lost Contact', rotation=90)
+
 
 # Adjust the layout to prevent overlapping labels and titles
 plt.tight_layout()
