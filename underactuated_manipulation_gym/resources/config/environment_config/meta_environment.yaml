@@ -44,10 +44,10 @@ policy_executors:
     grasp:
       index: 0
       env_config_file: underactuated_manipulation_gym/resources/config/environment_config/grasp_environment_1.yaml
-    push:
-      index: 1
-      env_name: PushEnvironment-v0
-      env_config_file: underactuated_manipulation_gym/resources/config/environment_config/push_environment.yaml
+    # push:
+    #   index: 1
+    #   env_name: PushEnvironment-v0
+    #   env_config_file: underactuated_manipulation_gym/resources/config/environment_config/push_environment.yaml
   
   ### Rule based ###
   rule_based:

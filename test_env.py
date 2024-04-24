@@ -54,14 +54,14 @@ for i in range(100):
     p.stepSimulation()
 for i in range(timesteps):
     neck_y = neck_y - 0.01 if neck_y > 0 else neck_y
-    p.changeDynamics(1, -1, mass=p.readUserDebugParameter(object_mass))
+    # p.changeDynamics(1, -1, mass=p.readUserDebugParameter(object_mass))
     v = p.readUserDebugParameter(interface_v)
     w_angular = p.readUserDebugParameter(interface_w_angular)
     # neck_y = p.readUserDebugParameter(interface_neck_y)
     neck_x = p.readUserDebugParameter(interface_neck_x)
-    # gripper_pos = p.readUserDebugParameter(interface_gripper_position)
+    gripper_pos = p.readUserDebugParameter(interface_gripper_position)
     gripper_pos = -1
-    action = np.array([v, w_angular, neck_y, neck_x, gripper_pos])
+    action = np.array([v, w_angular, neck_y, neck_x, 20, gripper_pos])
     obs, reward, done, _, _ = env.step(action)  
     contact_points = p.getContactPoints(bodyA=2, bodyB=1, linkIndexA=5)
     contact_points_left = p.getContactPoints(bodyA=2, bodyB=1, linkIndexA=4)

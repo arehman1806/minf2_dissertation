@@ -44,7 +44,7 @@ class BaseEnvironment(gym.Env):
         self.current_object = self.object_loader.get_current_object()
 
         
-        for i in range(1):
+        for i in range(50):
             p.stepSimulation()
 
         # Get the new observation after taking the action

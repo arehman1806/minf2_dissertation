@@ -364,6 +364,6 @@ def getHHA(C, D, RD):
     I = np.rint(I)
 
     # np.uint8: 256->1, but in MATLAB, uint8: 256->255
-    I[I>255] = 255
-    HHA = I.astype(np.uint8)
+    # I[I>255] = 255
+    HHA = I.astype(np.uint32)
     return HHA

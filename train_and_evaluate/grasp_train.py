@@ -11,7 +11,7 @@ import time
 import numpy as np
 
 # IMPORTANT. edit this before every run:
-tb_log_name = "hha_5_objects"
+tb_log_name = "hha_3_objects"
 # tb_log_name = "testing_videos"
 # Save a checkpoint every 1000 steps
 checkpoint_callback = CheckpointCallback(

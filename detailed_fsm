@@ -1,0 +1,17 @@
+// FSM Diagram
+digraph {
+	"Grasp, 0" [label="Grasp, 0"]
+	"Grasp, 1" [label="Grasp, 1"]
+	"Push, 0" [label="Push, 0"]
+	"Push, 1" [label="Push, 1"]
+	"Pick, 0" [label="Pick, 0"]
+	"Pick, 1" [label="Pick, 1"]
+	"Drag, 0" [label="Drag, 0"]
+	"Drag, 1" [label="Drag, 1"]
+	"Reorient, 0" [label="Reorient, 0"]
+	"Reorient, 1" [label="Reorient, 1"]
+	"Grasp, 0" -> "Pick, 0" [label="Pick, 0"]
+	"Grasp, 0" -> "Reorient, 1" [label="Reorient, 1"]
+	"Grasp, 1" -> "Pick, 1" [label="Pick, 1"]
+	"Grasp, 1" -> "Reorient, 0" [label="Reorient, 0"]
+}

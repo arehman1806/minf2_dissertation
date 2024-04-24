@@ -245,8 +245,8 @@ for i in range(timesteps):
                 if abs(smoothed_yaws[-1]) > vel:
                     vel = abs(smoothed_yaws[-1])
             print(f"Slip detected at timestep {i}")
-            # force += 100 * vel
-            force += 0
+            force += 100 * vel
+            # force += 0
     
     force_measurements.append(force)
     # Update plots for the first subplot (angular velocities)
@@ -297,10 +297,10 @@ for i in range(timesteps):
 plt.ioff()  # Turn off interactive mode
 
 # add vertical line for lost contact and add label for this event
-ax1.axvline(x=290, color='r', linestyle='--')
-ax1.text(290, 0.03, 'Lost Contact', rotation=90)
-ax2.axvline(x=290, color='r', linestyle='--')
-ax2.text(290, 5, 'Lost Contact', rotation=90)
+# ax1.axvline(x=290, color='r', linestyle='--')
+# ax1.text(290, 0.03, 'Lost Contact', rotation=90)
+# ax2.axvline(x=290, color='r', linestyle='--')
+# ax2.text(290, 5, 'Lost Contact', rotation=90)
 
 
 # Adjust the layout to prevent overlapping labels and titles

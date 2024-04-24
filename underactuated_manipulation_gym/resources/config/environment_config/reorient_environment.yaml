@@ -70,6 +70,7 @@ robot:
         max: 0.5
         init: 0
     gripper:
+      use_dynamic_force: False
       min: 0
       max: 0.1
       init: 0.1
